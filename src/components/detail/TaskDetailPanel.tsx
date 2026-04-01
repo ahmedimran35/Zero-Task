@@ -37,9 +37,10 @@ export default function TaskDetailPanel() {
   const timeLogs = task.timeLogs || [];
   const tags = task.tags || [];
   const dependsOn = task.dependsOn || [];
+  const activityLog = task.activityLog || [];
 
-  const sc = statusConfig[task.status];
-  const pc = priorityConfig[task.priority];
+  const sc = statusConfig[task.status] || statusConfig['todo'];
+  const pc = priorityConfig[task.priority] || priorityConfig['medium'];
   const timerActive = isTimerRunning(task.id);
 
   const handleDuplicate = async () => {
@@ -445,11 +446,11 @@ export default function TaskDetailPanel() {
           </div>
 
           {/* Activity Log */}
-          {task.activityLog.length > 0 && (
+          {activityLog.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Activity</p>
               <div className="space-y-2">
-                {task.activityLog.slice().reverse().slice(0, 10).map(entry => (
+                {activityLog.slice().reverse().slice(0, 10).map(entry => (
                   <div key={entry.id} className="flex items-start gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 flex-shrink-0" />
                     <div>

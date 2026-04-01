@@ -32,8 +32,8 @@ function KanbanCard({ task, selected, index }: { task: Task; selected: boolean; 
   const { startTimer, isTimerRunning } = useTimer();
   const isOverdue = task.dueDate && isPast(new Date(task.dueDate)) && task.status !== 'done';
   const categoryColor = state.categories.find(c => c.name === task.category)?.color || '#94a3b8';
-  const totalTime = task.timeLogs.reduce((a, l) => a + l.duration, 0);
-  const blocked = task.dependsOn.some(id => {
+  const totalTime = (task.timeLogs || []).reduce((a, l) => a + l.duration, 0);
+  const blocked = (task.dependsOn || []).some(id => {
     const dep = state.tasks.find(t => t.id === id);
     return dep && dep.status !== 'done';
   });
@@ -111,18 +111,18 @@ function KanbanCard({ task, selected, index }: { task: Task; selected: boolean; 
           <h3 className="text-sm font-semibold text-primary mb-1 line-clamp-2">{task.title}</h3>
           {task.description && <p className="text-xs text-tertiary mb-2 line-clamp-2">{task.description}</p>}
 
-          {task.tags.length > 0 && (
+          {(task.tags || []).length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {task.tags.slice(0, 3).map(tag => (
+              {(task.tags || []).slice(0, 3).map(tag => (
                 <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-md bg-tertiary text-secondary">#{tag}</span>
               ))}
             </div>
           )}
 
-          {task.subtasks.length > 0 && (
+          {(task.subtasks || []).length > 0 && (
             <div className="mb-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-tertiary">{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks</span>
+                <span className="text-[10px] text-tertiary">{(task.subtasks || []).filter(s => s.completed).length}/{(task.subtasks || []).length} subtasks</span>
                 <span className="text-[10px] font-medium text-secondary">{task.progress}%</span>
               </div>
               <div className="h-1.5 bg-tertiary rounded-full overflow-hidden">

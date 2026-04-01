@@ -66,7 +66,7 @@ export function getInitialState(): AppState {
 }
 
 function updateTaskProgress(task: Task): Task {
-  if (task.subtasks.length === 0) return task;
+  if (!task.subtasks || task.subtasks.length === 0) return task;
   const completed = task.subtasks.filter(s => s.completed).length;
   return { ...task, progress: Math.round((completed / task.subtasks.length) * 100) };
 }

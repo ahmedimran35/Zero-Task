@@ -45,7 +45,7 @@ function TaskRow({ task, index, isSelected }: { task: Task; index: number; isSel
   const isOverdue = task.dueDate && isPast(new Date(task.dueDate)) && task.status !== 'done';
   const sc = statusConfig[task.status];
   const categoryColor = state.categories.find(c => c.name === task.category)?.color || '#94a3b8';
-  const blocked = task.dependsOn.some(id => { const dep = state.tasks.find(t => t.id === id); return dep && dep.status !== 'done'; });
+  const blocked = (task.dependsOn || []).some(id => { const dep = state.tasks.find(t => t.id === id); return dep && dep.status !== 'done'; });
 
   return (
     <motion.div
