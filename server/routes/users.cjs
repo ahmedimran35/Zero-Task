@@ -88,6 +88,13 @@ router.delete('/:id', adminMiddleware, (req, res) => {
   res.json({ success: true });
 });
 
+// Get task count for a user (admin only)
+router.get('/:id/task-count', adminMiddleware, (req, res) => {
+  const db = getDb();
+  const row = db.prepare('SELECT COUNT(*) as count FROM tasks WHERE user_id = ?').get(req.params.id);
+  res.json({ count: row ? row.count : 0 });
+});
+
 // Reset password (admin only)
 router.put('/:id/password', adminMiddleware, async (req, res) => {
   const { password } = req.body;

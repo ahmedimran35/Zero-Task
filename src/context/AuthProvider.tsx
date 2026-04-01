@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { AuthContext } from './AuthContext';
 import type { User, SessionUser } from '../types/auth';
-import { api } from '../utils/api';
+import { api, setToken, getToken } from '../utils/api';
 
 const SESSION_KEY = 'taskflow-current-user';
 
 function loadSession(): SessionUser | null {
   try {
     const stored = localStorage.getItem(SESSION_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored && getToken()) return JSON.parse(stored);
   } catch { /* ignore */ }
   return null;
 }
@@ -18,6 +18,7 @@ function saveSession(user: SessionUser | null) {
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
   } else {
     localStorage.removeItem(SESSION_KEY);
+    setToken(null);
   }
 }
 
@@ -26,7 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<SessionUser | null>(() => loadSession());
   const [viewAsUser, setViewAsUser] = useState<SessionUser | null>(null);
 
-  // Load users when authenticated as admin
   useEffect(() => {
     if (currentUser?.role === 'admin') {
       api.getUsers().then(u => setUsers(u)).catch(() => {});
@@ -96,8 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { /* ignore */ }
   }, []);
 
-  const getUserTaskCount = useCallback((_userId: string): number => {
-    return 0;
+  const getUserTaskCount = useCallback(async (userId: string): Promise<number> => {
+    try {
+      const res = await api.getUserTaskCount(userId);
+      return res.count || 0;
+    } catch {
+      return 0;
+    }
   }, []);
 
   return (

@@ -40,6 +40,20 @@ app.set('fireWebhooks', webhooksModule.fireWebhooks);
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// Due-date automation cron: check every 5 minutes for overdue tasks
+const { getDb } = require('./db.cjs');
+setInterval(() => {
+  try {
+    const db = getDb();
+    const overdue = db.prepare(
+      `SELECT * FROM tasks WHERE status != 'done' AND due_date IS NOT NULL AND due_date < datetime('now')`
+    ).all();
+    for (const task of overdue) {
+      automationsModule.executeAutomations(db, task.user_id, 'due_date_passed', task, {});
+    }
+  } catch { /* ignore cron errors */ }
+}, 5 * 60 * 1000);
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`TaskFlow API server running on port ${PORT}`);
 });

@@ -203,6 +203,17 @@ export default function TaskDetailPanel() {
                 <span className="text-secondary">{totalHours}h {totalMins}m</span>
               </div>
             )}
+            {task.storyPoints > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-xs font-semibold text-primary-500 bg-primary-500/10 px-2 py-0.5 rounded-full">{task.storyPoints} SP</span>
+              </div>
+            )}
+            {task.timeEstimate > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock size={14} className="text-tertiary" />
+                <span className="text-secondary">Est: {Math.floor(task.timeEstimate / 60)}h {task.timeEstimate % 60}m</span>
+              </div>
+            )}
           </div>
 
           {/* Status selector */}

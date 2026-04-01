@@ -1,14 +1,28 @@
 const API_BASE = '/api';
 
+const TOKEN_KEY = 'taskflow-token';
+const SESSION_KEY = 'taskflow-current-user';
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string | null) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
 async function request(path: string, options: RequestInit = {}) {
-  const session = JSON.parse(localStorage.getItem('taskflow-current-user') || 'null');
+  const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
-  if (session) {
-    headers['x-user-id'] = session.id;
-    headers['x-user-role'] = session.role;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
@@ -17,9 +31,35 @@ async function request(path: string, options: RequestInit = {}) {
   return data;
 }
 
+async function uploadFile(path: string, file: File) {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Upload failed');
+  return data;
+}
+
 export const api = {
   // Auth
-  login: (email: string, password: string) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  login: async (email: string, password: string) => {
+    const data = await request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    setToken(data.token);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data.user));
+    return data.user;
+  },
+  getSession: () => request('/session'),
 
   // Users
   getUsers: () => request('/users'),
@@ -28,6 +68,7 @@ export const api = {
   deleteUser: (id: string) => request(`/users/${id}`, { method: 'DELETE' }),
   resetPassword: (id: string, password: string) => request(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
   toggleUserActive: (id: string) => request(`/users/${id}/toggle`, { method: 'PUT' }),
+  getUserTaskCount: (userId: string) => request(`/users/${userId}/task-count`),
 
   // Tasks
   getTasks: (userId?: string) => request(`/tasks${userId ? `?userId=${userId}` : ''}`),
@@ -97,6 +138,7 @@ export const api = {
 
   // Attachments
   getAttachments: (taskId: string) => request(`/attachments/${taskId}`),
+  uploadAttachment: (taskId: string, file: File) => uploadFile(`/attachments/${taskId}`, file),
   deleteAttachment: (id: string) => request(`/attachments/${id}`, { method: 'DELETE' }),
 
   // Automations

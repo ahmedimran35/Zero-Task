@@ -19,15 +19,16 @@ function AuthenticatedApp() {
 
     const loadData = async () => {
       try {
-        const [tasks, categories, templates, notifications] = await Promise.all([
+        const [tasks, categories, templates, notifications, savedViews] = await Promise.all([
           api.getTasks(viewAsUser ? effectiveUserId : undefined),
           api.getCategories(),
           api.getTemplates(),
           api.getNotifications(),
+          api.getSavedViews().catch(() => []),
         ]);
         dispatch({
           type: 'LOAD_STATE',
-          payload: { tasks, categories, templates, notifications },
+          payload: { tasks, categories, templates, notifications, savedViews },
         });
       } catch (err) {
         console.error('Failed to load data:', err);

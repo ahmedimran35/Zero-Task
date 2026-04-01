@@ -98,6 +98,11 @@ router.post('/', (req, res) => {
   const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
   // Fire webhooks
   try { const fireWebhooks = req.app.get('fireWebhooks'); if (fireWebhooks) fireWebhooks(db, req.userId, 'task.created', { id, title: t.title }); } catch {}
+  // Execute automations for task creation
+  try {
+    const { executeAutomations } = require('./automations.cjs');
+    executeAutomations(db, req.userId, 'task_created', { id }, {});
+  } catch { /* automations optional */ }
   res.json(taskToApi(row, db));
 });
 

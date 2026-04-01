@@ -31,6 +31,7 @@ export const sampleTasks: Task[] = [
     tags: ['design', 'frontend'], progress: 50, assignee: 'Alex', recurring: null, dependsOn: [], projectId: null, timeLogs: [], comments: [],
     activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 5, timeEstimate: 240,
   },
   {
     id: uuidv4(), title: 'Implement authentication', description: 'Set up OAuth2 authentication flow with JWT tokens and refresh token rotation.',
@@ -40,6 +41,7 @@ export const sampleTasks: Task[] = [
     tags: ['backend', 'security'], progress: 0, assignee: 'Jordan', recurring: null, dependsOn: [], projectId: null, timeLogs: [], comments: [],
     activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 8, timeEstimate: 480,
   },
   {
     id: uuidv4(), title: 'Morning workout routine', description: 'Complete 30-minute HIIT session followed by stretching.',
@@ -51,6 +53,7 @@ export const sampleTasks: Task[] = [
     timeLogs: [{ id: uuidv4(), startTime: new Date(Date.now() - 3600000).toISOString(), endTime: new Date().toISOString(), duration: 3600 }],
     comments: [], activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: new Date().toISOString(),
+    storyPoints: 1, timeEstimate: 30,
   },
   {
     id: uuidv4(), title: 'Read "Clean Code" chapters 5-8', description: 'Continue reading Clean Code by Robert C. Martin.',
@@ -62,6 +65,7 @@ export const sampleTasks: Task[] = [
     comments: [{ id: uuidv4(), text: 'Great chapter on formatting conventions', author: 'You', createdAt: new Date(Date.now() - 86400000).toISOString() }],
     activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 3, timeEstimate: 120,
   },
   {
     id: uuidv4(), title: 'Review monthly budget', description: 'Analyze spending from last month and adjust budget categories.',
@@ -71,6 +75,7 @@ export const sampleTasks: Task[] = [
     recurring: { type: 'monthly', interval: 1 }, dependsOn: [], projectId: null,
     timeLogs: [], comments: [], activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 2, timeEstimate: 60,
   },
   {
     id: uuidv4(), title: 'Write API documentation', description: 'Document all REST API endpoints with request/response examples.',
@@ -81,6 +86,7 @@ export const sampleTasks: Task[] = [
     timeLogs: [], comments: [],
     activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 3, timeEstimate: 180,
   },
   {
     id: uuidv4(), title: 'Plan weekend trip', description: 'Research and book accommodations for the upcoming weekend getaway.',
@@ -90,6 +96,7 @@ export const sampleTasks: Task[] = [
     tags: ['travel', 'planning'], progress: 0, assignee: null, recurring: null, dependsOn: [], projectId: null,
     timeLogs: [], comments: [], activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 0, timeEstimate: 0,
   },
   {
     id: uuidv4(), title: 'Fix CSS responsiveness issues', description: 'Address mobile layout breakpoints and fix overflow issues.',
@@ -100,5 +107,6 @@ export const sampleTasks: Task[] = [
     timeLogs: [], comments: [],
     activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
     completedAt: null,
+    storyPoints: 2, timeEstimate: 90,
   },
 ];

@@ -59,6 +59,8 @@ export interface Task {
   comments: Comment[];
   activityLog: ActivityLogEntry[];
   completedAt: string | null;
+  storyPoints: number;
+  timeEstimate: number;
 }
 
 export interface Category {
@@ -244,6 +246,7 @@ export interface AppState {
   showCategoryManager: boolean;
   showExportImport: boolean;
   toasts: ToastMessage[];
+  savedViews: SavedView[];
 }
 
 export interface ToastMessage {
@@ -292,4 +295,7 @@ export type AppAction =
   | { type: 'START_TIMER'; payload: { taskId: string; taskTitle: string } }
   | { type: 'STOP_TIMER' }
   | { type: 'DUPLICATE_TASK'; payload: string }
+  | { type: 'SET_SAVED_VIEWS'; payload: SavedView[] }
+  | { type: 'ADD_SAVED_VIEW'; payload: SavedView }
+  | { type: 'DELETE_SAVED_VIEW'; payload: string }
   | { type: 'LOAD_STATE'; payload: Partial<AppState> };

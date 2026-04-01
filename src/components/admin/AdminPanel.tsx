@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import type { User } from '../../types/auth';
@@ -19,11 +19,23 @@ export default function AdminPanel() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [taskCounts, setTaskCounts] = useState<Record<string, number>>({});
 
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      const counts: Record<string, number> = {};
+      await Promise.all(users.map(async (u) => {
+        counts[u.id] = await getUserTaskCount(u.id);
+      }));
+      setTaskCounts(counts);
+    };
+    if (users.length > 0) loadCounts();
+  }, [users, getUserTaskCount]);
 
   const handleResetPassword = () => {
     if (!resetPasswordUser || !newPassword.trim()) return;
@@ -113,7 +125,7 @@ export default function AdminPanel() {
             </thead>
             <tbody>
               {filteredUsers.map(user => {
-                const taskCount = getUserTaskCount(user.id);
+                const taskCount = taskCounts[user.id] ?? 0;
                 const isViewing = viewAsUser?.id === user.id;
                 return (
                   <tr key={user.id} className={`border-b border-primary hover:bg-tertiary/50 transition-colors ${isViewing ? 'bg-primary-500/5' : ''}`}>
@@ -163,7 +175,6 @@ export default function AdminPanel() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-1">
-                        {/* View tasks */}
                         {user.role !== 'admin' && (
                           <button
                             onClick={() => setViewAsUser(isViewing ? null : { id: user.id, email: user.email, name: user.name, role: user.role, avatar: user.avatar })}
@@ -175,7 +186,6 @@ export default function AdminPanel() {
                             <Eye size={14} />
                           </button>
                         )}
-                        {/* Toggle active */}
                         {user.id !== 'admin-default' && (
                           <button
                             onClick={() => toggleUserActive(user.id)}
@@ -187,7 +197,6 @@ export default function AdminPanel() {
                             {user.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
                           </button>
                         )}
-                        {/* Reset password */}
                         <button
                           onClick={() => { setResetPasswordUser(user); setNewPassword(''); }}
                           className="p-2 rounded-lg hover:bg-tertiary text-tertiary transition-colors"
@@ -195,7 +204,6 @@ export default function AdminPanel() {
                         >
                           <Key size={14} />
                         </button>
-                        {/* Edit */}
                         <button
                           onClick={() => setEditingUser(user)}
                           className="p-2 rounded-lg hover:bg-tertiary text-tertiary transition-colors"
@@ -203,7 +211,6 @@ export default function AdminPanel() {
                         >
                           <Edit3 size={14} />
                         </button>
-                        {/* Delete */}
                         {user.id !== 'admin-default' && (
                           <button
                             onClick={() => setConfirmDelete(user)}

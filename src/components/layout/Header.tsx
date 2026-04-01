@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import type { SavedView } from '../../types';
 import {
   Search, Sun, Moon, Plus, Filter, Download, Keyboard, LogOut,
+  Bookmark, Trash2, X,
 } from 'lucide-react';
 import Notifications from '../ui/Notifications';
 
@@ -27,7 +29,41 @@ export default function Header() {
   const { state, dispatch } = useAppContext();
   const { currentUser, logout, viewAsUser } = useAuth();
   const [showFilter, setShowFilter] = useState(false);
+  const [saveViewName, setSaveViewName] = useState('');
+  const [showSaveInput, setShowSaveInput] = useState(false);
   const isAdmin = currentUser?.role === 'admin';
+
+  const handleSaveView = () => {
+    if (!saveViewName.trim()) return;
+    const view: SavedView = {
+      id: crypto.randomUUID?.() || Date.now().toString(),
+      name: saveViewName.trim(),
+      viewType: state.currentView,
+      filters: {
+        search: state.searchQuery,
+        priority: state.filterPriority,
+        category: state.filterCategory,
+        status: state.filterStatus,
+        assignee: state.filterAssignee,
+        view: state.currentView,
+      },
+      createdAt: new Date().toISOString(),
+    };
+    dispatch({ type: 'ADD_SAVED_VIEW', payload: view });
+    setSaveViewName('');
+    setShowSaveInput(false);
+  };
+
+  const applySavedView = (view: SavedView) => {
+    const f = view.filters;
+    if (f.search !== undefined) dispatch({ type: 'SET_SEARCH', payload: f.search });
+    if (f.priority) dispatch({ type: 'SET_FILTER_PRIORITY', payload: f.priority as typeof state.filterPriority });
+    if (f.status) dispatch({ type: 'SET_FILTER_STATUS', payload: f.status as typeof state.filterStatus });
+    if (f.category) dispatch({ type: 'SET_FILTER_CATEGORY', payload: f.category });
+    if (f.assignee) dispatch({ type: 'SET_FILTER_ASSIGNEE', payload: f.assignee });
+    if (f.view) dispatch({ type: 'SET_VIEW', payload: f.view as typeof state.currentView });
+    setShowFilter(false);
+  };
 
   return (
     <header className="h-16 bg-card border-b border-primary flex items-center justify-between px-6 sticky top-0 z-30">
@@ -63,7 +99,62 @@ export default function Header() {
             <Filter size={16} className={showFilter ? 'text-white' : 'text-secondary'} />
           </button>
           {showFilter && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-card rounded-xl border border-primary shadow-theme-lg p-3 z-50">
+            <div className="absolute right-0 top-full mt-2 w-64 bg-card rounded-xl border border-primary shadow-theme-lg p-3 z-50">
+              {/* Saved Views */}
+              {state.savedViews.length > 0 && (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-tertiary uppercase tracking-wider">Saved Views</p>
+                  </div>
+                  <div className="space-y-1 mb-3">
+                    {state.savedViews.map(sv => (
+                      <div key={sv.id} className="flex items-center group">
+                        <button
+                          onClick={() => applySavedView(sv)}
+                          className="flex-1 flex items-center gap-2 text-left px-3 py-1.5 rounded-lg text-sm text-secondary hover:bg-tertiary transition-colors"
+                        >
+                          <Bookmark size={12} className="text-primary-500" />
+                          {sv.name}
+                        </button>
+                        <button
+                          onClick={() => dispatch({ type: 'DELETE_SAVED_VIEW', payload: sv.id })}
+                          className="p-1 rounded hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <Trash2 size={12} className="text-rose-500" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-primary my-2" />
+                </>
+              )}
+
+              {/* Save current view */}
+              {showSaveInput ? (
+                <div className="flex gap-1.5 mb-3">
+                  <input
+                    type="text"
+                    value={saveViewName}
+                    onChange={e => setSaveViewName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSaveView()}
+                    placeholder="View name..."
+                    autoFocus
+                    className="flex-1 px-2 py-1 bg-input rounded-lg text-xs text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+                  />
+                  <button onClick={handleSaveView} disabled={!saveViewName.trim()}
+                    className="px-2 py-1 bg-primary-500 text-white rounded-lg text-xs font-medium disabled:opacity-50">Save</button>
+                  <button onClick={() => { setShowSaveInput(false); setSaveViewName(''); }}
+                    className="p-1 rounded hover:bg-tertiary"><X size={14} className="text-tertiary" /></button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowSaveInput(true)}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-primary-500 hover:bg-primary-500/10 transition-colors mb-3"
+                >
+                  <Bookmark size={12} /> Save Current View
+                </button>
+              )}
+
               <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Priority</p>
               <div className="space-y-1 mb-3">
                 {(['all', 'urgent', 'high', 'medium', 'low'] as const).map(p => (

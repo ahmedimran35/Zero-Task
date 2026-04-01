@@ -30,7 +30,7 @@ export interface AuthContextType {
   deleteUser: (id: string) => Promise<void>;
   resetPassword: (id: string, newPassword: string) => Promise<void>;
   toggleUserActive: (id: string) => Promise<void>;
-  getUserTaskCount: (userId: string) => number;
+  getUserTaskCount: (userId: string) => Promise<number>;
   viewAsUser: SessionUser | null;
   setViewAsUser: (user: SessionUser | null) => void;
 }

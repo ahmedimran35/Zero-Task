@@ -39,6 +39,8 @@ export default function TaskModal() {
   const [assignee, setAssignee] = useState<string | null>(null);
   const [recurring, setRecurring] = useState<Recurrence | null>(null);
   const [dependsOn, setDependsOn] = useState<string[]>([]);
+  const [storyPoints, setStoryPoints] = useState(0);
+  const [timeEstimate, setTimeEstimate] = useState(0);
   const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
@@ -54,9 +56,12 @@ export default function TaskModal() {
       setAssignee(editingTask.assignee);
       setRecurring(editingTask.recurring);
       setDependsOn(editingTask.dependsOn);
+      setStoryPoints(editingTask.storyPoints || 0);
+      setTimeEstimate(editingTask.timeEstimate || 0);
     } else {
       setTitle(''); setDescription(''); setPriority('medium'); setStatus('todo'); setCategory('Work');
       setDueDate(''); setSubtasks([]); setTags([]); setAssignee(null); setRecurring(null); setDependsOn([]);
+      setStoryPoints(0); setTimeEstimate(0);
     }
     setShowTemplates(!editingTask);
   }, [editingTask]);
@@ -95,6 +100,8 @@ export default function TaskModal() {
       activityLog: editingTask?.activityLog || [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
       completedAt: editingTask?.completedAt || null,
       projectId: editingTask?.projectId || null,
+      storyPoints,
+      timeEstimate,
     };
 
     if (editingTask) {
@@ -253,16 +260,24 @@ export default function TaskModal() {
               <div className="flex gap-1.5">
                 {[1, 2, 3, 5, 8, 13].map(sp => (
                   <button key={sp} type="button"
-                    onClick={() => {/* story points handled in task creation */}}
-                    className="px-2 py-1.5 rounded-lg text-xs font-medium bg-input border border-primary hover:bg-primary-500/10 transition-colors">
+                    onClick={() => setStoryPoints(sp)}
+                    className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      storyPoints === sp ? 'bg-primary-500 text-white' : 'bg-input border border-primary hover:bg-primary-500/10'
+                    }`}>
                     {sp}
                   </button>
                 ))}
+                {storyPoints > 0 && (
+                  <button type="button" onClick={() => setStoryPoints(0)}
+                    className="px-2 py-1.5 rounded-lg text-xs font-medium bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors">
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-primary mb-1.5">Time Estimate (minutes)</label>
-              <input type="number" min={0} placeholder="e.g., 120"
+              <input type="number" min={0} value={timeEstimate || ''} onChange={e => setTimeEstimate(parseInt(e.target.value) || 0)} placeholder="e.g., 120"
                 className="w-full px-4 py-2.5 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none transition-all" />
             </div>
           </div>

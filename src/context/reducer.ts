@@ -46,6 +46,7 @@ export const initialState: AppState = {
   showCategoryManager: false,
   showExportImport: false,
   toasts: [],
+  savedViews: [],
 };
 
 export function getInitialState(): AppState {
@@ -327,6 +328,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       newState = state;
       break;
     }
+
+    case 'SET_SAVED_VIEWS': newState = { ...state, savedViews: action.payload }; break;
+    case 'ADD_SAVED_VIEW':
+      api.createSavedView({ name: action.payload.name, viewType: action.payload.viewType, filters: action.payload.filters }).catch(() => {});
+      newState = { ...state, savedViews: [action.payload, ...state.savedViews] };
+      break;
+    case 'DELETE_SAVED_VIEW':
+      api.deleteSavedView(action.payload).catch(() => {});
+      newState = { ...state, savedViews: state.savedViews.filter(v => v.id !== action.payload) };
+      break;
 
     case 'LOAD_STATE': newState = { ...state, ...action.payload }; break;
 
