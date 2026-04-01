@@ -45,7 +45,7 @@ const views: Record<string, React.ComponentType> = {
 
 export default function Layout() {
   const { state } = useAppContext();
-  const CurrentView = views[state.currentView];
+  const CurrentView = views[state.currentView] || Dashboard;
   const [confirmConfig, setConfirmConfig] = useState<{
     title: string; message: string; onConfirm: () => void; variant?: 'danger' | 'warning';
   } | null>(null);

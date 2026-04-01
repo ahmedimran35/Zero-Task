@@ -87,7 +87,10 @@ function AuthenticatedApp() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+      // Don't trigger shortcuts when typing in inputs
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return;
+      // Don't trigger if any modifier besides Ctrl/Meta is held
+      if (e.altKey) return;
 
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();

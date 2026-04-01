@@ -355,7 +355,18 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       newState = { ...state, savedViews: state.savedViews.filter(v => v.id !== action.payload) };
       break;
 
-    case 'LOAD_STATE': newState = { ...state, ...action.payload }; break;
+    case 'LOAD_STATE': {
+      const { tasks, categories, templates, notifications, savedViews } = action.payload as any;
+      newState = {
+        ...state,
+        ...(tasks !== undefined && { tasks }),
+        ...(categories !== undefined && { categories }),
+        ...(templates !== undefined && { templates }),
+        ...(notifications !== undefined && { notifications }),
+        ...(savedViews !== undefined && { savedViews }),
+      };
+      break;
+    }
 
     default: return state;
   }

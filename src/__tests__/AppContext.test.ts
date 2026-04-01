@@ -171,9 +171,12 @@ describe('appReducer', () => {
   });
 
   it('loads state', () => {
-    const result = appReducer(state, { type: 'LOAD_STATE', payload: { searchQuery: 'loaded', darkMode: true } });
-    expect(result.searchQuery).toBe('loaded');
-    expect(result.darkMode).toBe(true);
+    const task = makeTask();
+    const result = appReducer(state, { type: 'LOAD_STATE', payload: { tasks: [task], darkMode: true } as any });
+    expect(result.tasks).toHaveLength(1);
+    expect(result.tasks[0].id).toBe(task.id);
+    // darkMode should NOT be loaded (not whitelisted)
+    expect(result.darkMode).toBe(false);
   });
 
   it('progress updates when subtask is toggled', () => {
