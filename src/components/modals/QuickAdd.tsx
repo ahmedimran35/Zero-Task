@@ -15,6 +15,9 @@ export default function QuickAdd() {
   const [category, setCategory] = useState('Work');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [aiParsing, setAiParsing] = useState(false);
+  const [aiDraftingDesc, setAiDraftingDesc] = useState(false);
+  const [aiSubtasks, setAiSubtasks] = useState<string[]>([]);
+  const [aiSubtasksLoading, setAiSubtasksLoading] = useState(false);
 
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -81,6 +84,33 @@ export default function QuickAdd() {
       dispatch({ type: 'ADD_TOAST', payload: { id: crypto.randomUUID(), message: 'AI parsed your task!', type: 'success' } });
     } catch { /* AI parse failed */ }
     setAiParsing(false);
+  };
+
+  const handleAIDraftDescription = async () => {
+    if (!title.trim()) return;
+    setAiDraftingDesc(true);
+    try {
+      const result = await api.generateDescription({ title: title.trim(), existingDescription: description });
+      if (result.description) {
+        setDescription(result.description);
+        if (!showAdvanced) setShowAdvanced(true);
+        dispatch({ type: 'ADD_TOAST', payload: { id: crypto.randomUUID(), message: 'Description drafted!', type: 'success' } });
+      }
+    } catch {}
+    setAiDraftingDesc(false);
+  };
+
+  const handleAIGenerateSubtasks = async () => {
+    if (!title.trim()) return;
+    setAiSubtasksLoading(true);
+    setAiSubtasks([]);
+    try {
+      const result = await api.generateSubtasks({ title: title.trim(), description });
+      if (result.subtasks && result.subtasks.length > 0) {
+        setAiSubtasks(result.subtasks);
+      }
+    } catch {}
+    setAiSubtasksLoading(false);
   };
 
 
@@ -171,6 +201,28 @@ export default function QuickAdd() {
                 className="flex-1 px-3 py-2 bg-input rounded-lg text-sm text-primary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all"
               />
             </div>
+            {/* AI Buttons */}
+            <div className="flex gap-2">
+              <button onClick={handleAIDraftDescription} disabled={aiDraftingDesc || !title.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/10 text-violet-500 text-xs font-medium hover:bg-violet-500/20 transition-colors disabled:opacity-50">
+                <Wand2 size={12} /> {aiDraftingDesc ? 'Drafting...' : 'Draft Description'}
+              </button>
+              <button onClick={handleAIGenerateSubtasks} disabled={aiSubtasksLoading || !title.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/10 text-violet-500 text-xs font-medium hover:bg-violet-500/20 transition-colors disabled:opacity-50">
+                <Sparkles size={12} /> {aiSubtasksLoading ? 'Generating...' : 'Suggest Subtasks'}
+              </button>
+            </div>
+            {aiSubtasks.length > 0 && (
+              <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
+                <p className="text-[10px] font-semibold text-violet-500 uppercase tracking-wider mb-2">Suggested Subtasks</p>
+                {aiSubtasks.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 py-1 text-sm text-secondary">
+                    <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -64,6 +64,9 @@ export default function TaskDetailPanel() {
   const [commentText, setCommentText] = React.useState('');
   const [aiSummary, setAiSummary] = React.useState('');
   const [aiLoading, setAiLoading] = React.useState(false);
+  const [aiPriority, setAiPriority] = React.useState<{ priority: string; reason: string } | null>(null);
+  const [aiPriorityLoading, setAiPriorityLoading] = React.useState(false);
+  const [aiDescLoading, setAiDescLoading] = React.useState(false);
 
   const addComment = () => {
     if (!commentText.trim()) return;
@@ -111,6 +114,29 @@ export default function TaskDetailPanel() {
     } catch { setAiSummary('AI summarization unavailable.'); }
     setAiLoading(false);
   };
+
+  const handleAISuggestPriority = async () => {
+    setAiPriorityLoading(true);
+    setAiPriority(null);
+    try {
+      const result = await api.suggestPriority({ title: task.title, description: task.description, dueDate: task.dueDate });
+      setAiPriority(result);
+    } catch { setAiPriority({ priority: 'medium', reason: 'Could not determine' }); }
+    setAiPriorityLoading(false);
+  };
+
+  const handleAIDraftDescription = async () => {
+    setAiDescLoading(true);
+    try {
+      const result = await api.generateDescription({ title: task.title, existingDescription: task.description });
+      if (result.description) {
+        dispatch({ type: 'UPDATE_TASK', payload: { ...task, description: result.description } });
+        dispatch({ type: 'ADD_TOAST', payload: { id: crypto.randomUUID(), message: 'Description drafted!', type: 'success' } });
+      }
+    } catch {}
+    setAiDescLoading(false);
+  };
+
   const blockedBy = state.tasks.filter(t => task.dependsOn.includes(t.id));
   const dependentTasks = state.tasks.filter(t => t.dependsOn.includes(task.id));
   const category = state.categories.find(c => c.name === task.category);
@@ -186,22 +212,38 @@ export default function TaskDetailPanel() {
           )}
 
 
-          {/* AI Summary */}
-          <div>
-            <button
-              onClick={handleAISummarize}
-              disabled={aiLoading}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-500 text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              <Wand2 size={14} />
-              {aiLoading ? 'Summarizing...' : 'AI Summarize'}
+          {/* AI Tools */}
+          <div className="flex flex-wrap gap-2">
+            <button onClick={handleAISummarize} disabled={aiLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-500 text-xs font-medium transition-colors disabled:opacity-50">
+              <Wand2 size={12} /> {aiLoading ? 'Summarizing...' : 'Summarize'}
             </button>
-            {aiSummary && (
-              <div className="mt-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
-                <p className="text-sm text-secondary leading-relaxed">{aiSummary}</p>
-              </div>
-            )}
+            <button onClick={handleAIDraftDescription} disabled={aiDescLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-500 text-xs font-medium transition-colors disabled:opacity-50">
+              <Wand2 size={12} /> {aiDescLoading ? 'Drafting...' : 'Draft Description'}
+            </button>
+            <button onClick={handleAISuggestPriority} disabled={aiPriorityLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-500 text-xs font-medium transition-colors disabled:opacity-50">
+              <Wand2 size={12} /> {aiPriorityLoading ? 'Analyzing...' : 'Suggest Priority'}
+            </button>
           </div>
+          {aiSummary && (
+            <div className="mt-2 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
+              <p className="text-xs font-semibold text-violet-500 uppercase tracking-wider mb-1">Summary</p>
+              <p className="text-sm text-secondary leading-relaxed">{aiSummary}</p>
+            </div>
+          )}
+          {aiPriority && (
+            <div className="mt-2 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
+              <p className="text-xs font-semibold text-violet-500 uppercase tracking-wider mb-1">Suggested Priority</p>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-medium ${
+                  aiPriority.priority === 'urgent' ? 'text-rose-500' : aiPriority.priority === 'high' ? 'text-amber-500' : aiPriority.priority === 'medium' ? 'text-primary-500' : 'text-slate-500'
+                }`}>{aiPriority.priority.charAt(0).toUpperCase() + aiPriority.priority.slice(1)}</span>
+                <span className="text-xs text-tertiary">— {aiPriority.reason}</span>
+              </div>
+            </div>
+          )}
           {/* Meta info */}
           <div className="grid grid-cols-2 gap-3">
             {task.dueDate && (

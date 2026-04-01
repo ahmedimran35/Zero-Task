@@ -126,6 +126,11 @@ export const api = {
   generateSubtasks: (data: Record<string, unknown>) => request('/ai/generate-subtasks', { method: 'POST', body: JSON.stringify(data) }),
   smartSearch: (query: string) => request('/ai/search', { method: 'POST', body: JSON.stringify({ query }) }),
   getStandup: () => request('/ai/standup'),
+  workspaceQ: (question: string) => request('/ai/workspace-q', { method: 'POST', body: JSON.stringify({ question }) }),
+  generateDescription: (data: Record<string, unknown>) => request('/ai/generate-description', { method: 'POST', body: JSON.stringify(data) }),
+  suggestPriority: (data: Record<string, unknown>) => request('/ai/suggest-priority', { method: 'POST', body: JSON.stringify(data) }),
+  suggestTags: (data: Record<string, unknown>) => request('/ai/suggest-tags', { method: 'POST', body: JSON.stringify(data) }),
+  getWeeklySummary: () => request('/ai/weekly-summary', { method: 'POST', body: JSON.stringify({}) }),
 
   // AI Providers
   getAIProviders: () => request('/ai-providers'),

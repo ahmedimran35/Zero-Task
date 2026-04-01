@@ -5,7 +5,7 @@ import { api } from '../../utils/api';
 import { getCompletionRate, getCategoryStats, getOverdueTasks, getDueTodayTasks } from '../../utils/taskUtils';
 import {
   CheckCircle2, Clock, AlertTriangle, TrendingUp, BarChart3, Target, Zap,
-  ArrowUpRight, ArrowDownRight, ListTodo, Wand2, AlertCircle,
+  ArrowUpRight, ArrowDownRight, ListTodo, Wand2, AlertCircle, Send, Sparkles, MessageSquare,
 } from 'lucide-react';
 import EmptyState from '../ui/EmptyState';
 
@@ -17,6 +17,11 @@ export default function Dashboard() {
   const { state, dispatch } = useAppContext();
   const [standup, setStandup] = useState<any>(null);
   const [standupLoading, setStandupLoading] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [weeklySummary, setWeeklySummary] = useState('');
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
   const { tasks, categories } = state;
 
   const fetchStandup = async () => {
@@ -26,6 +31,30 @@ export default function Dashboard() {
       setStandup(result);
     } catch { /* standup unavailable */ }
     setStandupLoading(false);
+  };
+
+  const handleAiQuestion = async () => {
+    if (!aiQuestion.trim() || aiLoading) return;
+    setAiLoading(true);
+    setAiAnswer('');
+    try {
+      const result = await api.workspaceQ(aiQuestion.trim());
+      setAiAnswer(result.answer || 'No answer available.');
+    } catch (err: any) {
+      setAiAnswer('Error: ' + (err?.message || 'Could not get answer'));
+    }
+    setAiLoading(false);
+  };
+
+  const handleWeeklySummary = async () => {
+    setWeeklyLoading(true);
+    try {
+      const result = await api.getWeeklySummary();
+      setWeeklySummary(result.summary || 'No activity this week.');
+    } catch (err: any) {
+      setWeeklySummary('Error: ' + (err?.message || 'Could not generate'));
+    }
+    setWeeklyLoading(false);
   };
   const completionRate = getCompletionRate(tasks);
   const categoryStats = getCategoryStats(tasks, categories);
@@ -273,6 +302,64 @@ export default function Dashboard() {
           <div className="text-center py-8">
             <Wand2 size={32} className="text-tertiary mx-auto mb-2" />
             <p className="text-sm text-tertiary">Click Generate to create your daily standup</p>
+          </div>
+        )}
+      </div>
+
+      {/* AI Workspace Q&A */}
+      <div className="bg-card rounded-2xl p-6 border border-primary shadow-theme-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <MessageSquare size={16} className="text-violet-500" />
+          <h3 className="text-sm font-semibold text-primary">Ask AI About Your Tasks</h3>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={aiQuestion}
+            onChange={e => setAiQuestion(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAiQuestion()}
+            placeholder="What should I focus on today?"
+            className="flex-1 px-3 py-2 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+          />
+          <button onClick={handleAiQuestion} disabled={aiLoading || !aiQuestion.trim()}
+            className="px-3 py-2 bg-violet-500 text-white rounded-xl text-sm font-medium hover:bg-violet-600 transition-colors disabled:opacity-50">
+            {aiLoading ? <><Sparkles size={14} className="animate-spin inline mr-1" />Thinking...</> : <><Send size={14} className="inline mr-1" />Ask</>}
+          </button>
+        </div>
+        {aiAnswer && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-sm text-secondary leading-relaxed">
+            {aiAnswer}
+          </motion.div>
+        )}
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {['What am I blocked on?', 'What\'s overdue?', 'Summarize my week', 'What tasks are in review?'].map(q => (
+            <button key={q} onClick={() => { setAiQuestion(q); }}
+              className="text-[10px] px-2 py-1 rounded-full bg-tertiary text-secondary hover:bg-violet-500/10 hover:text-violet-500 transition-colors">
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Weekly Summary */}
+      <div className="bg-card rounded-2xl p-6 border border-primary shadow-theme-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+            <Sparkles size={16} className="text-violet-500" />
+            Weekly Summary
+          </h3>
+          <button onClick={handleWeeklySummary} disabled={weeklyLoading}
+            className="text-xs text-violet-500 hover:text-violet-600 font-medium transition-colors disabled:opacity-50">
+            {weeklyLoading ? 'Generating...' : weeklySummary ? 'Refresh' : 'Generate'}
+          </button>
+        </div>
+        {weeklySummary ? (
+          <p className="text-sm text-secondary leading-relaxed">{weeklySummary}</p>
+        ) : (
+          <div className="text-center py-6">
+            <Sparkles size={24} className="text-tertiary mx-auto mb-2" />
+            <p className="text-xs text-tertiary">Click Generate for a weekly overview</p>
           </div>
         )}
       </div>
