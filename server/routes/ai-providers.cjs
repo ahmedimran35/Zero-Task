@@ -113,13 +113,17 @@ const providerConfig = {
     keyPrefix: 'Bearer ',
     format: 'openai',
   },
-  kilocode: {
+  kilococode: {
     label: 'Kilo Code Gateway',
-    modelsUrl: 'https://kilocode.ai/api/models',
-    chatUrl: 'https://kilocode.ai/api/chat/completions',
+    modelsUrl: null,
+    chatUrl: 'https://api.kilocode.ai/v1/chat/completions',
     keyHeader: 'Authorization',
     keyPrefix: 'Bearer ',
     format: 'openai',
+    staticModels: [
+      { id: 'kilo-code', name: 'Kilo Code' },
+      { id: 'kilo-code-fast', name: 'Kilo Code Fast' },
+    ],
   },
   openai_compatible: {
     label: 'OpenAI Compatible',
@@ -234,6 +238,8 @@ router.post('/fetch-models', async (req, res) => {
   let modelsUrl = config.modelsUrl;
   if (type === 'openai_compatible' && url) {
     modelsUrl = url.replace(/\/+$/, '') + '/v1/models';
+  } else if (type === 'openai_compatible' && !url) {
+    return res.status(400).json({ error: 'Base URL required for OpenAI Compatible provider' });
   }
   if (type === 'gemini') {
     modelsUrl = modelsUrl + '?key=' + encodeURIComponent(key);
@@ -247,7 +253,10 @@ router.post('/fetch-models', async (req, res) => {
       headers[config.keyHeader] = config.keyPrefix + key;
     }
 
-    const response = await fetch(modelsUrl, { headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const response = await fetch(modelsUrl, { headers, signal: controller.signal });
+    clearTimeout(timeout);
     if (!response.ok) {
       const text = await response.text();
       return res.status(response.status).json({ error: 'API error: ' + response.status + ' - ' + text.slice(0, 300) });
@@ -292,6 +301,9 @@ router.post('/fetch-models', async (req, res) => {
 
     res.json({ models });
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ error: 'Request timed out after 15 seconds. Check the URL and try again.' });
+    }
     res.status(500).json({ error: 'Failed to fetch models: ' + err.message });
   }
 });
