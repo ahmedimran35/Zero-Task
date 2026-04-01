@@ -31,6 +31,13 @@ export default function TaskDetailPanel() {
 
   if (!task) return null;
 
+  // Safe defaults for array properties
+  const subtasks = task.subtasks || [];
+  const comments = task.comments || [];
+  const timeLogs = task.timeLogs || [];
+  const tags = task.tags || [];
+  const dependsOn = task.dependsOn || [];
+
   const sc = statusConfig[task.status];
   const pc = priorityConfig[task.priority];
   const timerActive = isTimerRunning(task.id);
@@ -44,7 +51,7 @@ export default function TaskDetailPanel() {
     } catch { /* ignore */ }
   };
   const isOverdue = task.dueDate && isPast(new Date(task.dueDate)) && task.status !== 'done';
-  const totalTime = task.timeLogs.reduce((acc, log) => acc + log.duration, 0);
+  const totalTime = timeLogs.reduce((acc, log) => acc + log.duration, 0);
   const totalHours = Math.floor(totalTime / 3600);
   const totalMins = Math.floor((totalTime % 3600) / 60);
 
@@ -55,7 +62,7 @@ export default function TaskDetailPanel() {
   };
 
   const handleToggleSubtask = (subtaskId: string) => {
-    const updatedSubtasks = task.subtasks.map(s =>
+    const updatedSubtasks = subtasks.map(s =>
       s.id === subtaskId ? { ...s, completed: !s.completed } : s
     );
     dispatch({ type: 'UPDATE_TASK', payload: { ...task, subtasks: updatedSubtasks } });
@@ -93,7 +100,7 @@ export default function TaskDetailPanel() {
 
     const updated = {
       ...task,
-      comments: [...task.comments, { id: crypto.randomUUID?.() || Date.now().toString(), text, author: 'You', createdAt: new Date().toISOString() }],
+      comments: [...comments, { id: crypto.randomUUID?.() || Date.now().toString(), text, author: 'You', createdAt: new Date().toISOString() }],
     };
     dispatch({ type: 'UPDATE_TASK', payload: updated });
     setCommentText('');
@@ -109,7 +116,7 @@ export default function TaskDetailPanel() {
     setAiLoading(true);
     setAiSummary('');
     try {
-      const result = await (api as any).summarizeTask({ taskTitle: task.title, comments: task.comments, description: task.description });
+      const result = await (api as any).summarizeTask({ taskTitle: task.title, comments: comments, description: task.description });
       setAiSummary(result.summary || 'No summary available.');
     } catch { setAiSummary('AI summarization unavailable.'); }
     setAiLoading(false);
@@ -137,7 +144,7 @@ export default function TaskDetailPanel() {
     setAiDescLoading(false);
   };
 
-  const blockedBy = state.tasks.filter(t => task.dependsOn.includes(t.id));
+  const blockedBy = state.tasks.filter(t => dependsOn.includes(t.id));
   const dependentTasks = state.tasks.filter(t => t.dependsOn.includes(task.id));
   const category = state.categories.find(c => c.name === task.category);
 
@@ -309,16 +316,16 @@ export default function TaskDetailPanel() {
           </div>
 
           {/* Subtasks */}
-          {task.subtasks.length > 0 && (
+          {subtasks.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
-                Subtasks ({task.subtasks.filter(s => s.completed).length}/{task.subtasks.length})
+                Subtasks ({subtasks.filter(s => s.completed).length}/{subtasks.length})
               </p>
               <div className="h-2 bg-tertiary rounded-full overflow-hidden mb-3">
                 <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${task.progress}%` }} />
               </div>
               <div className="space-y-2">
-                {task.subtasks.map(subtask => (
+                {subtasks.map(subtask => (
                   <button
                     key={subtask.id}
                     onClick={() => handleToggleSubtask(subtask.id)}
@@ -339,11 +346,11 @@ export default function TaskDetailPanel() {
           )}
 
           {/* Tags */}
-          {task.tags.length > 0 && (
+          {tags.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Tags</p>
               <div className="flex flex-wrap gap-1.5">
-                {task.tags.map(tag => (
+                {tags.map(tag => (
                   <span key={tag} className="text-xs px-2.5 py-1 rounded-lg bg-tertiary text-secondary">
                     #{tag}
                   </span>
@@ -382,11 +389,11 @@ export default function TaskDetailPanel() {
           )}
 
           {/* Time Logs */}
-          {task.timeLogs.length > 0 && (
+          {timeLogs.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">Time Logs</p>
               <div className="space-y-2">
-                {task.timeLogs.map(log => {
+                {timeLogs.map(log => {
                   const hrs = Math.floor(log.duration / 3600);
                   const mins = Math.floor((log.duration % 3600) / 60);
                   return (
@@ -409,10 +416,10 @@ export default function TaskDetailPanel() {
           {/* Comments */}
           <div>
             <p className="text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
-              Comments ({task.comments.length})
+              Comments ({comments.length})
             </p>
             <div className="space-y-3 mb-3">
-              {task.comments.map(comment => (
+              {comments.map(comment => (
                 <div key={comment.id} className="p-3 rounded-xl bg-tertiary">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-primary">{comment.author}</span>
