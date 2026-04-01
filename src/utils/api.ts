@@ -126,4 +126,14 @@ export const api = {
   generateSubtasks: (data: Record<string, unknown>) => request('/ai/generate-subtasks', { method: 'POST', body: JSON.stringify(data) }),
   smartSearch: (query: string) => request('/ai/search', { method: 'POST', body: JSON.stringify({ query }) }),
   getStandup: () => request('/ai/standup'),
+
+  // AI Providers
+  getAIProviders: () => request('/ai-providers'),
+  getActiveAIProvider: () => request('/ai-providers/active'),
+  createAIProvider: (data: Record<string, unknown>) => request('/ai-providers', { method: 'POST', body: JSON.stringify(data) }),
+  updateAIProvider: (id: string, data: Record<string, unknown>) => request('/ai-providers/' + id, { method: 'PUT', body: JSON.stringify(data) }),
+  activateAIProvider: (id: string) => request('/ai-providers/' + id + '/activate', { method: 'PUT' }),
+  deactivateAllAIProviders: () => request('/ai-providers/deactivate-all', { method: 'PUT' }),
+  deleteAIProvider: (id: string) => request('/ai-providers/' + id, { method: 'DELETE' }),
+  fetchAIModels: (data: Record<string, unknown>) => request('/ai-providers/fetch-models', { method: 'POST', body: JSON.stringify(data) }),
 };

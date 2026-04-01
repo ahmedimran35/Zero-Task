@@ -42,6 +42,7 @@ app.use('/api/webhooks', webhooksModule.router);
 
 // AI routes
 app.use('/api/ai', require('./routes/ai.cjs'));
+app.use('/api/ai-providers', require('./routes/ai-providers.cjs').router);
 
 // Forms routes
 app.use('/api/forms', require('./routes/forms.cjs'));

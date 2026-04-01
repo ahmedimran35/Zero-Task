@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
+import AIProviderManager from './AIProviderManager';
 import {
   Settings as SettingsIcon, Bell, Sparkles, Palette, User, Moon, Sun,
-  Save, Check, Key,
+  Save, Check,
 } from 'lucide-react';
 
 type Tab = 'notifications' | 'ai' | 'appearance' | 'account';
@@ -24,9 +25,6 @@ export default function SettingsView() {
     taskCompleted: { inApp: true, email: false },
     dailyDigest: { enabled: true },
   });
-
-  const [aiKey, setAiKey] = useState('');
-  const [aiModel, setAiModel] = useState('gpt-4o-mini');
 
   useEffect(() => {
     try {
@@ -144,59 +142,14 @@ export default function SettingsView() {
         )}
 
         {activeTab === 'ai' && (
-          <div className="p-6 space-y-6">
-            <div className="flex items-center gap-2">
-              <Sparkles size={20} className="text-violet-500" />
-              <h2 className="text-lg font-semibold text-primary">AI Assistant Configuration</h2>
-              {!isAdmin && <span className="text-xs bg-amber-500/15 text-amber-500 px-2 py-0.5 rounded-full">Admin only</span>}
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-primary mb-1.5">OpenAI API Key</label>
-                <div className="relative">
-                  <Key size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
-                  <input type="password" value={aiKey} onChange={e => setAiKey(e.target.value)}
-                    placeholder="sk-..." disabled={!isAdmin}
-                    className="w-full pl-10 pr-4 py-2.5 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all disabled:opacity-50" />
-                </div>
-                <p className="text-xs text-tertiary mt-1">Set as OPENAI_API_KEY env var on server for AI features</p>
+          <div className="p-6 space-y-4">
+            {!isAdmin ? (
+              <div className="text-center py-8">
+                <Sparkles size={32} className="text-tertiary mx-auto mb-2" />
+                <p className="text-sm text-tertiary">Only admins can manage AI providers</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-primary mb-1.5">Model</label>
-                <select value={aiModel} onChange={e => setAiModel(e.target.value)} disabled={!isAdmin}
-                  className="w-full px-4 py-2.5 bg-input rounded-xl text-sm text-primary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all disabled:opacity-50">
-                  <option value="gpt-4o-mini">GPT-4o Mini (Fast, cheaper)</option>
-                  <option value="gpt-4o">GPT-4o (Best quality)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-primary mb-3">Enabled AI Features</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {[
-                    { label: 'Natural Language Parsing', desc: 'Parse priority, dates, tags from text' },
-                    { label: 'Task Summarization', desc: 'Summarize long comment threads' },
-                    { label: 'Subtask Generation', desc: 'Auto-generate subtasks from title' },
-                    { label: 'Smart Search', desc: 'AI-powered natural language search' },
-                    { label: 'Daily Standup', desc: 'Auto-generate standup reports' },
-                  ].map((feat, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-tertiary">
-                      <input type="checkbox" defaultChecked disabled={!isAdmin}
-                        className="w-4 h-4 rounded border-primary text-violet-500 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-primary">{feat.label}</p>
-                        <p className="text-xs text-tertiary">{feat.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {isAdmin && (
-              <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl text-sm font-medium hover:shadow-lg transition-all">
-                {saved ? <Check size={16} /> : <Save size={16} />}
-                {saved ? 'Saved!' : 'Save AI Settings'}
-              </button>
+            ) : (
+              <AIProviderManager />
             )}
           </div>
         )}

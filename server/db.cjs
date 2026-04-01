@@ -301,6 +301,17 @@ function initSchema() {
       created_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS ai_providers (
+      id TEXT PRIMARY KEY,
+      provider_type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      api_key TEXT NOT NULL DEFAULT '',
+      base_url TEXT DEFAULT '',
+      model TEXT DEFAULT '',
+      is_active INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // Migration: add columns if they don't exist
