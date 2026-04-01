@@ -1,0 +1,114 @@
+const API_BASE = '/api';
+
+async function request(path: string, options: RequestInit = {}) {
+  const session = JSON.parse(localStorage.getItem('taskflow-current-user') || 'null');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+  if (session) {
+    headers['x-user-id'] = session.id;
+    headers['x-user-role'] = session.role;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+export const api = {
+  // Auth
+  login: (email: string, password: string) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+
+  // Users
+  getUsers: () => request('/users'),
+  createUser: (data: { email: string; password: string; name: string }) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id: string, data: Record<string, unknown>) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteUser: (id: string) => request(`/users/${id}`, { method: 'DELETE' }),
+  resetPassword: (id: string, password: string) => request(`/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+  toggleUserActive: (id: string) => request(`/users/${id}/toggle`, { method: 'PUT' }),
+
+  // Tasks
+  getTasks: (userId?: string) => request(`/tasks${userId ? `?userId=${userId}` : ''}`),
+  createTask: (task: Record<string, unknown>) => request('/tasks', { method: 'POST', body: JSON.stringify(task) }),
+  updateTask: (id: string, task: Record<string, unknown>) => request(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(task) }),
+  deleteTask: (id: string) => request(`/tasks/${id}`, { method: 'DELETE' }),
+  duplicateTask: (id: string) => request(`/tasks/${id}/duplicate`, { method: 'POST' }),
+
+  // Categories
+  getCategories: () => request('/categories'),
+  createCategory: (data: Record<string, unknown>) => request('/categories', { method: 'POST', body: JSON.stringify(data) }),
+  updateCategory: (id: string, data: Record<string, unknown>) => request(`/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCategory: (id: string) => request(`/categories/${id}`, { method: 'DELETE' }),
+
+  // Templates
+  getTemplates: () => request('/templates'),
+  createTemplate: (data: Record<string, unknown>) => request('/templates', { method: 'POST', body: JSON.stringify(data) }),
+  deleteTemplate: (id: string) => request(`/templates/${id}`, { method: 'DELETE' }),
+
+  // Notifications
+  getNotifications: () => request('/notifications'),
+  markNotificationRead: (id: string) => request(`/notifications/${id}/read`, { method: 'PUT' }),
+  clearNotifications: () => request('/notifications', { method: 'DELETE' }),
+
+  // Support Tickets
+  getTickets: () => request('/tickets'),
+  getTicket: (id: string) => request(`/tickets/${id}`),
+  createTicket: (data: { subject: string; description: string; priority: string }) => request('/tickets', { method: 'POST', body: JSON.stringify(data) }),
+  updateTicket: (id: string, data: Record<string, unknown>) => request(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  addTicketMessage: (ticketId: string, message: string) => request(`/tickets/${ticketId}/messages`, { method: 'POST', body: JSON.stringify({ message }) }),
+  deleteTicket: (id: string) => request(`/tickets/${id}`, { method: 'DELETE' }),
+  getUnreadTicketCount: () => request('/tickets/unread-count'),
+
+  // Goals
+  getGoals: () => request('/goals'),
+  createGoal: (data: Record<string, unknown>) => request('/goals', { method: 'POST', body: JSON.stringify(data) }),
+  updateGoal: (id: string, data: Record<string, unknown>) => request(`/goals/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  updateKeyResult: (goalId: string, krId: string, currentValue: number) => request(`/goals/${goalId}/key-results/${krId}`, { method: 'PUT', body: JSON.stringify({ currentValue }) }),
+  deleteGoal: (id: string) => request(`/goals/${id}`, { method: 'DELETE' }),
+
+  // Saved Views
+  getSavedViews: () => request('/saved-views'),
+  createSavedView: (data: { name: string; viewType: string; filters: Record<string, unknown> }) => request('/saved-views', { method: 'POST', body: JSON.stringify(data) }),
+  deleteSavedView: (id: string) => request(`/saved-views/${id}`, { method: 'DELETE' }),
+
+  // Sprints
+  getSprints: () => request('/sprints'),
+  getSprint: (id: string) => request(`/sprints/${id}`),
+  createSprint: (data: Record<string, unknown>) => request('/sprints', { method: 'POST', body: JSON.stringify(data) }),
+  updateSprint: (id: string, data: Record<string, unknown>) => request(`/sprints/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  addSprintTask: (sprintId: string, taskId: string) => request(`/sprints/${sprintId}/tasks`, { method: 'POST', body: JSON.stringify({ taskId }) }),
+  removeSprintTask: (sprintId: string, taskId: string) => request(`/sprints/${sprintId}/tasks/${taskId}`, { method: 'DELETE' }),
+  deleteSprint: (id: string) => request(`/sprints/${id}`, { method: 'DELETE' }),
+
+  // Projects
+  getProjects: () => request('/projects'),
+  createProject: (data: Record<string, unknown>) => request('/projects', { method: 'POST', body: JSON.stringify(data) }),
+  updateProject: (id: string, data: Record<string, unknown>) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProject: (id: string) => request(`/projects/${id}`, { method: 'DELETE' }),
+
+  // Custom Fields
+  getCustomFields: () => request('/custom-fields'),
+  createCustomField: (data: Record<string, unknown>) => request('/custom-fields', { method: 'POST', body: JSON.stringify(data) }),
+  deleteCustomField: (id: string) => request(`/custom-fields/${id}`, { method: 'DELETE' }),
+  getCustomFieldValues: (taskId: string) => request(`/custom-fields/values/${taskId}`),
+  setCustomFieldValue: (taskId: string, fieldId: string, value: string) => request(`/custom-fields/values/${taskId}/${fieldId}`, { method: 'PUT', body: JSON.stringify({ value }) }),
+
+  // Attachments
+  getAttachments: (taskId: string) => request(`/attachments/${taskId}`),
+  deleteAttachment: (id: string) => request(`/attachments/${id}`, { method: 'DELETE' }),
+
+  // Automations
+  getAutomations: () => request('/automations'),
+  createAutomation: (data: Record<string, unknown>) => request('/automations', { method: 'POST', body: JSON.stringify(data) }),
+  updateAutomation: (id: string, data: Record<string, unknown>) => request(`/automations/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAutomation: (id: string) => request(`/automations/${id}`, { method: 'DELETE' }),
+
+  // Webhooks
+  getWebhooks: () => request('/webhooks'),
+  createWebhook: (data: Record<string, unknown>) => request('/webhooks', { method: 'POST', body: JSON.stringify(data) }),
+  updateWebhook: (id: string, data: Record<string, unknown>) => request(`/webhooks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteWebhook: (id: string) => request(`/webhooks/${id}`, { method: 'DELETE' }),
+  testWebhook: (id: string) => request(`/webhooks/test/${id}`, { method: 'POST' }),
+};

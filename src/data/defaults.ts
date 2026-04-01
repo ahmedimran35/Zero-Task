@@ -1,0 +1,104 @@
+import type { Category, Task, TaskTemplate } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+
+export const defaultCategories: Category[] = [
+  { id: '1', name: 'Work', color: '#3b82f6', icon: 'briefcase', taskCount: 0 },
+  { id: '2', name: 'Personal', color: '#10b981', icon: 'user', taskCount: 0 },
+  { id: '3', name: 'Health', color: '#f43f5e', icon: 'heart', taskCount: 0 },
+  { id: '4', name: 'Learning', color: '#8b5cf6', icon: 'book-open', taskCount: 0 },
+  { id: '5', name: 'Finance', color: '#f59e0b', icon: 'dollar-sign', taskCount: 0 },
+];
+
+export const defaultTemplates: TaskTemplate[] = [
+  { id: 't1', name: 'Bug Report', icon: 'bug', defaultTitle: '', defaultDescription: 'Steps to reproduce:\n1.\n2.\n\nExpected:\n\nActual:', defaultPriority: 'high', defaultCategory: 'Work', defaultSubtasks: ['Reproduce issue', 'Identify root cause', 'Implement fix', 'Write tests'], defaultTags: ['bugfix'] },
+  { id: 't2', name: 'Feature Request', icon: 'sparkles', defaultTitle: '', defaultDescription: 'User story:\n\nAs a [user], I want [feature] so that [benefit].\n\nAcceptance criteria:', defaultPriority: 'medium', defaultCategory: 'Work', defaultSubtasks: ['Design solution', 'Implement', 'Test', 'Deploy'], defaultTags: ['feature'] },
+  { id: 't3', name: 'Meeting Notes', icon: 'calendar', defaultTitle: '', defaultDescription: 'Attendees:\n\nAgenda:\n\nNotes:\n\nAction items:', defaultPriority: 'low', defaultCategory: 'Work', defaultSubtasks: [], defaultTags: ['meeting'] },
+  { id: 't4', name: 'Weekly Review', icon: 'clipboard', defaultTitle: 'Weekly Review', defaultDescription: 'What went well:\n\nWhat to improve:\n\nGoals for next week:', defaultPriority: 'medium', defaultCategory: 'Personal', defaultSubtasks: ['Review completed tasks', 'Assess goals', 'Plan next week'], defaultTags: ['review', 'weekly'] },
+  { id: 't5', name: 'Learning Goal', icon: 'book-open', defaultTitle: '', defaultDescription: 'Topic:\nResources:\nTime commitment:', defaultPriority: 'medium', defaultCategory: 'Learning', defaultSubtasks: ['Find resources', 'Create study plan', 'Practice', 'Review'], defaultTags: ['learning'] },
+];
+
+export const sampleTasks: Task[] = [
+  {
+    id: uuidv4(), title: 'Design new landing page', description: 'Create wireframes and mockups for the new marketing landing page with modern design patterns.',
+    status: 'in-progress', priority: 'high', category: 'Work',
+    dueDate: new Date(Date.now() + 2 * 86400000).toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [
+      { id: uuidv4(), title: 'Research competitors', completed: true },
+      { id: uuidv4(), title: 'Create wireframes', completed: true },
+      { id: uuidv4(), title: 'Design mockups', completed: false },
+      { id: uuidv4(), title: 'Get feedback', completed: false },
+    ],
+    tags: ['design', 'frontend'], progress: 50, assignee: 'Alex', recurring: null, dependsOn: [], projectId: null, timeLogs: [], comments: [],
+    activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+  {
+    id: uuidv4(), title: 'Implement authentication', description: 'Set up OAuth2 authentication flow with JWT tokens and refresh token rotation.',
+    status: 'todo', priority: 'urgent', category: 'Work',
+    dueDate: new Date(Date.now() + 5 * 86400000).toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [{ id: uuidv4(), title: 'Set up OAuth provider', completed: false }, { id: uuidv4(), title: 'Implement JWT handling', completed: false }, { id: uuidv4(), title: 'Add refresh token logic', completed: false }],
+    tags: ['backend', 'security'], progress: 0, assignee: 'Jordan', recurring: null, dependsOn: [], projectId: null, timeLogs: [], comments: [],
+    activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+  {
+    id: uuidv4(), title: 'Morning workout routine', description: 'Complete 30-minute HIIT session followed by stretching.',
+    status: 'done', priority: 'medium', category: 'Health',
+    dueDate: new Date().toISOString(), createdAt: new Date(Date.now() - 86400000).toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [{ id: uuidv4(), title: 'Warm up', completed: true }, { id: uuidv4(), title: 'HIIT session', completed: true }, { id: uuidv4(), title: 'Cool down stretches', completed: true }],
+    tags: ['fitness', 'routine'], progress: 100, assignee: null,
+    recurring: { type: 'daily', interval: 1 }, dependsOn: [], projectId: null,
+    timeLogs: [{ id: uuidv4(), startTime: new Date(Date.now() - 3600000).toISOString(), endTime: new Date().toISOString(), duration: 3600 }],
+    comments: [], activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: new Date().toISOString(),
+  },
+  {
+    id: uuidv4(), title: 'Read "Clean Code" chapters 5-8', description: 'Continue reading Clean Code by Robert C. Martin.',
+    status: 'review', priority: 'low', category: 'Learning',
+    dueDate: new Date(Date.now() + 7 * 86400000).toISOString(), createdAt: new Date(Date.now() - 259200000).toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [{ id: uuidv4(), title: 'Chapter 5 - Formatting', completed: true }, { id: uuidv4(), title: 'Chapter 6 - Objects', completed: true }, { id: uuidv4(), title: 'Chapter 7 - Error Handling', completed: true }, { id: uuidv4(), title: 'Chapter 8 - Boundaries', completed: false }],
+    tags: ['reading', 'programming'], progress: 75, assignee: null, recurring: null, dependsOn: [], projectId: null,
+    timeLogs: [{ id: uuidv4(), startTime: new Date(Date.now() - 7200000).toISOString(), endTime: new Date(Date.now() - 3600000).toISOString(), duration: 3600 }],
+    comments: [{ id: uuidv4(), text: 'Great chapter on formatting conventions', author: 'You', createdAt: new Date(Date.now() - 86400000).toISOString() }],
+    activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+  {
+    id: uuidv4(), title: 'Review monthly budget', description: 'Analyze spending from last month and adjust budget categories.',
+    status: 'todo', priority: 'medium', category: 'Finance',
+    dueDate: new Date(Date.now() + 3 * 86400000).toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [], tags: ['finance', 'monthly'], progress: 0, assignee: null,
+    recurring: { type: 'monthly', interval: 1 }, dependsOn: [], projectId: null,
+    timeLogs: [], comments: [], activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+  {
+    id: uuidv4(), title: 'Write API documentation', description: 'Document all REST API endpoints with request/response examples.',
+    status: 'in-progress', priority: 'high', category: 'Work',
+    dueDate: new Date(Date.now() + 4 * 86400000).toISOString(), createdAt: new Date(Date.now() - 172800000).toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [{ id: uuidv4(), title: 'Document auth endpoints', completed: true }, { id: uuidv4(), title: 'Document user endpoints', completed: false }, { id: uuidv4(), title: 'Document task endpoints', completed: false }],
+    tags: ['docs', 'api'], progress: 33, assignee: 'Alex', recurring: null, dependsOn: [], projectId: null,
+    timeLogs: [], comments: [],
+    activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+  {
+    id: uuidv4(), title: 'Plan weekend trip', description: 'Research and book accommodations for the upcoming weekend getaway.',
+    status: 'todo', priority: 'low', category: 'Personal',
+    dueDate: new Date(Date.now() + 10 * 86400000).toISOString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [{ id: uuidv4(), title: 'Choose destination', completed: false }, { id: uuidv4(), title: 'Book hotel', completed: false }, { id: uuidv4(), title: 'Plan activities', completed: false }],
+    tags: ['travel', 'planning'], progress: 0, assignee: null, recurring: null, dependsOn: [], projectId: null,
+    timeLogs: [], comments: [], activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+  {
+    id: uuidv4(), title: 'Fix CSS responsiveness issues', description: 'Address mobile layout breakpoints and fix overflow issues.',
+    status: 'review', priority: 'medium', category: 'Work',
+    dueDate: new Date(Date.now() + 86400000).toISOString(), createdAt: new Date(Date.now() - 86400000).toISOString(), updatedAt: new Date().toISOString(),
+    subtasks: [{ id: uuidv4(), title: 'Audit mobile layouts', completed: true }, { id: uuidv4(), title: 'Fix breakpoint issues', completed: true }, { id: uuidv4(), title: 'Test on devices', completed: false }],
+    tags: ['css', 'mobile', 'bugfix'], progress: 66, assignee: 'Jordan', recurring: null, dependsOn: [], projectId: null,
+    timeLogs: [], comments: [],
+    activityLog: [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
+    completedAt: null,
+  },
+];
