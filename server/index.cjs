@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
@@ -10,6 +12,11 @@ app.use(express.json({ limit: '10mb' }));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Setup WebSocket
+const { setupWebSocket, broadcastToUser } = require('./websocket.cjs');
+setupWebSocket(server);
+app.set('broadcastToUser', broadcastToUser);
 
 // API Routes
 app.use('/api/auth', require('./routes/auth.cjs'));
@@ -23,7 +30,7 @@ app.use('/api/goals', require('./routes/goals.cjs'));
 app.use('/api/saved-views', require('./routes/saved-views.cjs'));
 app.use('/api/sprints', require('./routes/sprints.cjs'));
 
-// New routes
+// Feature routes
 const automationsModule = require('./routes/automations.cjs');
 app.use('/api/automations', automationsModule.router);
 app.use('/api/custom-fields', require('./routes/custom-fields.cjs'));
@@ -32,6 +39,15 @@ app.use('/api/attachments', require('./routes/attachments.cjs'));
 
 const webhooksModule = require('./routes/webhooks.cjs');
 app.use('/api/webhooks', webhooksModule.router);
+
+// AI routes
+app.use('/api/ai', require('./routes/ai.cjs'));
+
+// Forms routes
+app.use('/api/forms', require('./routes/forms.cjs'));
+
+// Email notifications
+app.use('/api/notification-preferences', require('./routes/notification-preferences.cjs'));
 
 // Export modules for use in other routes
 app.set('executeAutomations', automationsModule.executeAutomations);
@@ -54,6 +70,16 @@ setInterval(() => {
   } catch { /* ignore cron errors */ }
 }, 5 * 60 * 1000);
 
-app.listen(PORT, '0.0.0.0', () => {
+// Daily email digest cron: check every hour
+const { sendDailyDigest } = require('./email.cjs');
+setInterval(() => {
+  try {
+    const hour = new Date().getHours();
+    if (hour === 8) sendDailyDigest();
+  } catch { /* ignore */ }
+}, 60 * 60 * 1000);
+
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`TaskFlow API server running on port ${PORT}`);
+  console.log(`WebSocket server running on ws://0.0.0.0:${PORT}/ws`);
 });

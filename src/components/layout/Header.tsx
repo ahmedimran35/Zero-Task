@@ -26,7 +26,7 @@ const viewTitles: Record<string, string> = {
 };
 
 export default function Header() {
-  const { state, dispatch } = useAppContext();
+  const { state, dispatch, wsStatus } = useAppContext();
   const { currentUser, logout, viewAsUser } = useAuth();
   const [showFilter, setShowFilter] = useState(false);
   const [saveViewName, setSaveViewName] = useState('');
@@ -230,6 +230,16 @@ export default function Header() {
           <Plus size={16} />
           Add Task
         </motion.button>
+
+        {/* Connection status */}
+        <div className="flex items-center gap-1.5 px-2" title={wsStatus === 'connected' ? 'Real-time connected' : 'Disconnected'}>
+          <div className={`w-2 h-2 rounded-full ${
+            wsStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : wsStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
+          }`} />
+          <span className="text-[10px] text-tertiary hidden xl:inline">
+            {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? '...' : 'Offline'}
+          </span>
+        </div>
 
         {/* User avatar + logout */}
         {currentUser && (

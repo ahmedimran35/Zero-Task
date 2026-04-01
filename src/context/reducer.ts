@@ -329,6 +329,22 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       break;
     }
 
+    case 'ADD_TASK_SILENT': {
+      if (state.tasks.find(t => t.id === action.payload.id)) { newState = state; break; }
+      newState = { ...state, tasks: [...state.tasks, action.payload] };
+      break;
+    }
+    case 'UPDATE_TASK_SILENT':
+      newState = { ...state, tasks: state.tasks.map(t => t.id === action.payload.id ? action.payload : t) };
+      break;
+    case 'DELETE_TASK_SILENT':
+      newState = {
+        ...state,
+        tasks: state.tasks.filter(t => t.id !== action.payload),
+        selectedTask: state.selectedTask?.id === action.payload ? null : state.selectedTask,
+      };
+      break;
+
     case 'SET_SAVED_VIEWS': newState = { ...state, savedViews: action.payload }; break;
     case 'ADD_SAVED_VIEW':
       api.createSavedView({ name: action.payload.name, viewType: action.payload.viewType, filters: action.payload.filters }).catch(() => {});

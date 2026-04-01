@@ -103,6 +103,8 @@ router.post('/', (req, res) => {
     const { executeAutomations } = require('./automations.cjs');
     executeAutomations(db, req.userId, 'task_created', { id }, {});
   } catch { /* automations optional */ }
+  // Broadcast to connected clients
+  try { const broadcast = req.app.get('broadcastToUser'); if (broadcast) broadcast(req.userId, { type: 'TASK_CREATED', payload: taskToApi(row, db) }); } catch {}
   res.json(taskToApi(row, db));
 });
 
@@ -190,6 +192,8 @@ router.put('/:id', (req, res) => {
       fireWebhooks(db, req.userId, event, { id: taskId, title: t.title, status: t.status });
     }
   } catch {}
+  // Broadcast to connected clients
+  try { const broadcast = req.app.get('broadcastToUser'); if (broadcast) broadcast(req.userId, { type: 'TASK_UPDATED', payload: taskToApi(row, db) }); } catch {}
   res.json(taskToApi(row, db));
 });
 
@@ -244,6 +248,8 @@ router.delete('/:id', (req, res) => {
     return res.status(403).json({ error: 'Not authorized' });
   }
   db.prepare('DELETE FROM tasks WHERE id = ?').run(req.params.id);
+  // Broadcast to connected clients
+  try { const broadcast = req.app.get('broadcastToUser'); if (broadcast) broadcast(req.userId, { type: 'TASK_DELETED', payload: { id: req.params.id } }); } catch {}
   res.json({ success: true });
 });
 

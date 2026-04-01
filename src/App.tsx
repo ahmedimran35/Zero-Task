@@ -1,9 +1,11 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState } from 'react';
 import { AppContext } from './context/AppContext';
 import { appReducer, getInitialState } from './context/reducer';
 import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './context/AuthContext';
-import { api } from './utils/api';
+import { api, getToken } from './utils/api';
+import { connectWS, disconnectWS, onWSMessage, getWSStatus } from './utils/ws';
+import type { WSEvent } from './utils/ws';
 import Layout from './components/layout/Layout';
 import ToastContainer from './components/ui/Toast';
 import LoginPage from './components/auth/LoginPage';
@@ -11,6 +13,7 @@ import LoginPage from './components/auth/LoginPage';
 function AuthenticatedApp() {
   const { currentUser, isAuthenticated, viewAsUser } = useAuth();
   const [state, dispatch] = useReducer(appReducer, undefined, getInitialState);
+  const [wsStatus, setWsStatus] = useState<'connected' | 'connecting' | 'disconnected'>('disconnected');
 
   // Load data from API when user changes
   useEffect(() => {
@@ -36,6 +39,40 @@ function AuthenticatedApp() {
     };
     loadData();
   }, [currentUser?.id, viewAsUser?.id]);
+
+  // WebSocket connection
+  useEffect(() => {
+    if (!isAuthenticated) {
+      disconnectWS();
+      setWsStatus('disconnected');
+      return;
+    }
+
+    const token = getToken();
+    if (token) {
+      connectWS(token);
+      const interval = setInterval(() => setWsStatus(getWSStatus()), 2000);
+      return () => { clearInterval(interval); disconnectWS(); };
+    }
+  }, [isAuthenticated]);
+
+  // Handle incoming WebSocket events
+  useEffect(() => {
+    const unsub = onWSMessage((event: WSEvent) => {
+      switch (event.type) {
+        case 'TASK_CREATED':
+          dispatch({ type: 'ADD_TASK_SILENT', payload: event.payload as any });
+          break;
+        case 'TASK_UPDATED':
+          dispatch({ type: 'UPDATE_TASK_SILENT', payload: event.payload as any });
+          break;
+        case 'TASK_DELETED':
+          dispatch({ type: 'DELETE_TASK_SILENT', payload: (event.payload as any).id });
+          break;
+      }
+    });
+    return unsub;
+  }, []);
 
   // Dark mode
   useEffect(() => {
@@ -82,7 +119,7 @@ function AuthenticatedApp() {
   }
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch, wsStatus }}>
       <Layout />
       <ToastContainer />
     </AppContext.Provider>

@@ -295,6 +295,9 @@ export type AppAction =
   | { type: 'START_TIMER'; payload: { taskId: string; taskTitle: string } }
   | { type: 'STOP_TIMER' }
   | { type: 'DUPLICATE_TASK'; payload: string }
+  | { type: 'ADD_TASK_SILENT'; payload: Task }
+  | { type: 'UPDATE_TASK_SILENT'; payload: Task }
+  | { type: 'DELETE_TASK_SILENT'; payload: string }
   | { type: 'SET_SAVED_VIEWS'; payload: SavedView[] }
   | { type: 'ADD_SAVED_VIEW'; payload: SavedView }
   | { type: 'DELETE_SAVED_VIEW'; payload: string }

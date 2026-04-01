@@ -4,6 +4,7 @@ import type { AppState, AppAction } from '../types';
 export const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
+  wsStatus?: 'connected' | 'connecting' | 'disconnected';
 } | null>(null);
 
 export function useAppContext() {
