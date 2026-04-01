@@ -23,6 +23,8 @@ const viewTitles: Record<string, string> = {
   automations: 'Automations',
   projects: 'Projects',
   integrations: 'Integrations',
+  settings: 'Settings',
+  forms: 'Forms',
 };
 
 export default function Header() {

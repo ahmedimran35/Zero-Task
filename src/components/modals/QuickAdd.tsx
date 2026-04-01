@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppContext } from '../../context/AppContext';
+import { api } from '../../utils/api';
 import type { Priority, TaskStatus } from '../../types';
 import { format } from 'date-fns';
-import { Search, Plus, Clock, Sparkles } from 'lucide-react';
+import { Search, Plus, Clock, Sparkles, Wand2 } from 'lucide-react';
 import { parseNaturalLanguage } from '../../utils/naturalLanguage';
 
 export default function QuickAdd() {
@@ -13,6 +14,8 @@ export default function QuickAdd() {
   const [priority, setPriority] = useState<Priority>('medium');
   const [category, setCategory] = useState('Work');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [aiParsing, setAiParsing] = useState(false);
+
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +68,22 @@ export default function QuickAdd() {
     handleClose();
   };
 
+
+  const handleAIParse = async () => {
+    if (!title.trim()) return;
+    setAiParsing(true);
+    try {
+      const result = await api.parseTask(title.trim());
+      if (result.title) setTitle(result.title);
+      if (result.priority) setPriority(result.priority);
+      if (result.dueDate) setDueDate(result.dueDate);
+      if (!showAdvanced && (result.priority || result.dueDate)) setShowAdvanced(true);
+      dispatch({ type: 'ADD_TOAST', payload: { id: crypto.randomUUID(), message: 'AI parsed your task!', type: 'success' } });
+    } catch { /* AI parse failed */ }
+    setAiParsing(false);
+  };
+
+
   if (!state.showQuickAdd) return null;
 
   const recentTasks = state.tasks.slice(-5).reverse();
@@ -100,6 +119,14 @@ export default function QuickAdd() {
             placeholder="Type a task title and press Enter..."
             className="flex-1 bg-transparent text-sm text-primary placeholder:text-tertiary outline-none"
           />
+          <button
+            onClick={handleAIParse}
+            disabled={aiParsing || !title.trim()}
+            className="text-xs text-violet-500 hover:text-violet-600 font-medium transition-colors flex items-center gap-1 disabled:opacity-50"
+          >
+            <Wand2 size={12} />
+            {aiParsing ? 'Parsing...' : 'AI Parse'}
+          </button>
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="text-xs text-primary-500 hover:text-primary-600 font-medium transition-colors"

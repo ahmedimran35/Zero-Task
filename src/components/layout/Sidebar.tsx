@@ -7,7 +7,7 @@ import { useTimer, formatElapsed } from '../../hooks/useTimer';
 import {
   LayoutDashboard, Columns3, List, Calendar, ChevronLeft, ChevronRight,
   FolderKanban, Plus, CheckCircle2, Clock, AlertTriangle, Settings,
-  Shield, LogOut, Eye, LifeBuoy, Square, BarChart3, Target, Users, Zap, FolderOpen, Link2,
+  Shield, LogOut, Eye, LifeBuoy, Square, BarChart3, Target, Users, Zap, FolderOpen, Link2, FileText,
 } from 'lucide-react';
 
 const navItems = [
@@ -22,6 +22,7 @@ const navItems = [
   { id: 'workload' as const, label: 'Workload', icon: Users, key: 'W' },
   { id: 'automations' as const, label: 'Automations', icon: Zap, key: 'A' },
   { id: 'integrations' as const, label: 'Integrations', icon: Link2, key: 'I' },
+  { id: 'forms' as const, label: 'Forms', icon: FileText, key: 'F' },
   { id: 'tickets' as const, label: 'Support', icon: LifeBuoy, key: 'H' },
 ];
 
@@ -131,6 +132,20 @@ export default function Sidebar() {
           </button>
         )}
 
+
+        {/* Settings Nav Item */}
+        <button
+          onClick={() => dispatch({ type: 'SET_VIEW', payload: 'settings' })}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
+            state.currentView === 'settings' ? 'bg-white/15 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'
+          }`}
+        >
+          <Settings size={20} className="flex-shrink-0" />
+          {state.sidebarOpen && <span className="text-sm font-medium whitespace-nowrap">Settings</span>}
+          {state.currentView === 'settings' && (
+            <motion.div layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-400 rounded-r-full" />
+          )}
+        </button>
         {/* Categories */}
         {state.sidebarOpen && (
           <>

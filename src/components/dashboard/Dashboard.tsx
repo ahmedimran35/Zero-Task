@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
+import { api } from '../../utils/api';
 import { getCompletionRate, getCategoryStats, getOverdueTasks, getDueTodayTasks } from '../../utils/taskUtils';
 import {
   CheckCircle2, Clock, AlertTriangle, TrendingUp, BarChart3, Target, Zap,
-  ArrowUpRight, ArrowDownRight, ListTodo,
+  ArrowUpRight, ArrowDownRight, ListTodo, Wand2, AlertCircle,
 } from 'lucide-react';
 import EmptyState from '../ui/EmptyState';
 
@@ -13,7 +15,18 @@ const statusColors: Record<string, string> = {
 
 export default function Dashboard() {
   const { state, dispatch } = useAppContext();
+  const [standup, setStandup] = useState<any>(null);
+  const [standupLoading, setStandupLoading] = useState(false);
   const { tasks, categories } = state;
+
+  const fetchStandup = async () => {
+    setStandupLoading(true);
+    try {
+      const result = await api.getStandup();
+      setStandup(result);
+    } catch { /* standup unavailable */ }
+    setStandupLoading(false);
+  };
   const completionRate = getCompletionRate(tasks);
   const categoryStats = getCategoryStats(tasks, categories);
   const overdueTasks = getOverdueTasks(tasks);
@@ -221,6 +234,47 @@ export default function Dashboard() {
             })}
           </div>
         </motion.div>
+      </div>
+
+      {/* AI Standup */}
+      <div className="bg-card rounded-2xl p-6 border border-primary shadow-theme-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+            <Wand2 size={16} className="text-violet-500" />
+            Daily Standup
+          </h3>
+          <button onClick={fetchStandup} disabled={standupLoading}
+            className="text-xs text-violet-500 hover:text-violet-600 font-medium transition-colors disabled:opacity-50">
+            {standupLoading ? 'Generating...' : standup ? 'Refresh' : 'Generate'}
+          </button>
+        </div>
+        {standup ? (
+          <div className="space-y-4">
+            <div>
+              <p className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider mb-1">Completed</p>
+              {standup.completed.length > 0 ? standup.completed.map((t: any) => (
+                <div key={t.id} className="flex items-center gap-2 py-1"><CheckCircle2 size={12} className="text-emerald-500 flex-shrink-0" /><span className="text-sm text-secondary">{t.title}</span></div>
+              )) : <p className="text-xs text-tertiary">No completed tasks recently</p>}
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-primary-500 uppercase tracking-wider mb-1">In Progress</p>
+              {standup.inProgress.length > 0 ? standup.inProgress.map((t: any) => (
+                <div key={t.id} className="flex items-center gap-2 py-1"><Clock size={12} className="text-primary-500 flex-shrink-0" /><span className="text-sm text-secondary">{t.title}</span></div>
+              )) : <p className="text-xs text-tertiary">No tasks in progress</p>}
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-amber-500 uppercase tracking-wider mb-1">Planned</p>
+              {standup.planned.length > 0 ? standup.planned.map((t: any) => (
+                <div key={t.id} className="flex items-center gap-2 py-1"><AlertCircle size={12} className="text-amber-500 flex-shrink-0" /><span className="text-sm text-secondary">{t.title}</span></div>
+              )) : <p className="text-xs text-tertiary">No planned tasks</p>}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Wand2 size={32} className="text-tertiary mx-auto mb-2" />
+            <p className="text-sm text-tertiary">Click Generate to create your daily standup</p>
+          </div>
+        )}
       </div>
     </div>
   );

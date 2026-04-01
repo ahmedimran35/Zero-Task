@@ -5,7 +5,7 @@ import type { TaskStatus, Priority } from '../../types';
 import { format, isPast, isToday } from 'date-fns';
 import {
   X, CheckCircle2, Circle, Clock, AlertCircle, Calendar,
-  Edit3, Trash2, MessageSquare, Timer, FolderOpen, User, Link, Play, Square, Copy,
+  Edit3, Trash2, MessageSquare, Timer, FolderOpen, User, Link, Play, Square, Copy, Wand2,
 } from 'lucide-react';
 import { useTimer, formatElapsed } from '../../hooks/useTimer';
 import { api } from '../../utils/api';
@@ -62,6 +62,8 @@ export default function TaskDetailPanel() {
   };
 
   const [commentText, setCommentText] = React.useState('');
+  const [aiSummary, setAiSummary] = React.useState('');
+  const [aiLoading, setAiLoading] = React.useState(false);
 
   const addComment = () => {
     if (!commentText.trim()) return;
@@ -99,6 +101,16 @@ export default function TaskDetailPanel() {
     return text.replace(/@(\w+)/g, '<span class="text-primary-500 font-semibold bg-primary-500/10 px-1 rounded">@$1</span>');
   };
 
+
+  const handleAISummarize = async () => {
+    setAiLoading(true);
+    setAiSummary('');
+    try {
+      const result = await (api as any).summarizeTask({ taskTitle: task.title, comments: task.comments, description: task.description });
+      setAiSummary(result.summary || 'No summary available.');
+    } catch { setAiSummary('AI summarization unavailable.'); }
+    setAiLoading(false);
+  };
   const blockedBy = state.tasks.filter(t => task.dependsOn.includes(t.id));
   const dependentTasks = state.tasks.filter(t => t.dependsOn.includes(task.id));
   const category = state.categories.find(c => c.name === task.category);
@@ -173,6 +185,23 @@ export default function TaskDetailPanel() {
             </div>
           )}
 
+
+          {/* AI Summary */}
+          <div>
+            <button
+              onClick={handleAISummarize}
+              disabled={aiLoading}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-500 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <Wand2 size={14} />
+              {aiLoading ? 'Summarizing...' : 'AI Summarize'}
+            </button>
+            {aiSummary && (
+              <div className="mt-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
+                <p className="text-sm text-secondary leading-relaxed">{aiSummary}</p>
+              </div>
+            )}
+          </div>
           {/* Meta info */}
           <div className="grid grid-cols-2 gap-3">
             {task.dueDate && (

@@ -16,6 +16,8 @@ import SprintView from '../sprints/SprintView';
 import AutomationsView from '../automations/AutomationsView';
 import ProjectsView from '../projects/ProjectsView';
 import IntegrationsView from '../integrations/IntegrationsView';
+import SettingsView from '../settings/SettingsView';
+import FormsView from '../forms/FormsView';
 import TaskModal from '../modals/TaskModal';
 import TaskDetailPanel from '../detail/TaskDetailPanel';
 import QuickAdd from '../modals/QuickAdd';
@@ -37,6 +39,8 @@ const views: Record<string, React.ComponentType> = {
   automations: AutomationsView,
   projects: ProjectsView,
   integrations: IntegrationsView,
+  settings: SettingsView,
+  forms: FormsView,
 };
 
 export default function Layout() {

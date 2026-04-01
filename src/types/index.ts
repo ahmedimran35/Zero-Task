@@ -1,6 +1,6 @@
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
-export type ViewType = 'dashboard' | 'kanban' | 'list' | 'calendar' | 'admin' | 'tickets' | 'gantt' | 'goals' | 'workload' | 'sprints' | 'automations' | 'projects' | 'integrations';
+export type ViewType = 'dashboard' | 'kanban' | 'list' | 'calendar' | 'admin' | 'tickets' | 'gantt' | 'goals' | 'workload' | 'sprints' | 'automations' | 'projects' | 'integrations' | 'settings' | 'forms';
 export type TicketStatus = 'open' | 'in-progress' | 'resolved' | 'closed';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'custom';
 export type GoalStatus = 'active' | 'completed' | 'archived';
