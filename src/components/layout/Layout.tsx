@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
 import Sidebar from './Sidebar';
@@ -44,23 +45,32 @@ const views: Record<string, React.ComponentType> = {
 };
 
 export default function Layout() {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
+  const isMobile = useIsMobile();
   const CurrentView = views[state.currentView] || Dashboard;
   const [confirmConfig, setConfirmConfig] = useState<{
     title: string; message: string; onConfirm: () => void; variant?: 'danger' | 'warning';
   } | null>(null);
 
+  const sidebarMargin = isMobile ? 0 : (state.sidebarOpen ? 280 : 72);
+
   return (
     <div className="flex min-h-screen bg-primary">
       <Sidebar />
+      {isMobile && state.sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30"
+          onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+        />
+      )}
       <motion.div
         initial={false}
-        animate={{ marginLeft: state.sidebarOpen ? 280 : 72 }}
+        animate={{ marginLeft: sidebarMargin }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         className="flex-1 flex flex-col min-h-screen"
       >
         <Header />
-        <main className="flex-1 p-6 overflow-auto">
+        <main className={`flex-1 overflow-auto ${isMobile ? 'p-3' : 'p-6'}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={state.currentView}
@@ -94,3 +104,4 @@ export default function Layout() {
     </div>
   );
 }
+

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 import type { Priority } from '../../types';
-import { X, AlertCircle, LifeBuoy } from 'lucide-react';
+import { X, AlertCircle, LifeBuoy, User } from 'lucide-react';
 
 const priorityOptions: { value: Priority; label: string; color: string }[] = [
   { value: 'low', label: 'Low', color: 'bg-slate-400' },
@@ -12,9 +13,12 @@ const priorityOptions: { value: Priority; label: string; color: string }[] = [
 ];
 
 export default function CreateTicketModal({ onClose }: { onClose: () => void }) {
+  const { currentUser, users } = useAuth();
+  const isAdmin = currentUser?.role === 'admin';
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
+  const [assignedTo, setAssignedTo] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,7 +31,10 @@ export default function CreateTicketModal({ onClose }: { onClose: () => void }) 
     }
     setSubmitting(true);
     try {
-      await api.createTicket({ subject: subject.trim(), description: description.trim(), priority });
+      const ticket = await api.createTicket({ subject: subject.trim(), description: description.trim(), priority });
+      if (isAdmin && assignedTo && ticket?.id) {
+        await api.updateTicket(ticket.id, { assignedTo });
+      }
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create ticket');
@@ -110,6 +117,25 @@ export default function CreateTicketModal({ onClose }: { onClose: () => void }) 
               ))}
             </div>
           </div>
+
+          {isAdmin && users.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1.5">Assign To</label>
+              <div className="relative">
+                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
+                <select
+                  value={assignedTo}
+                  onChange={e => setAssignedTo(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-input rounded-xl text-sm text-primary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all appearance-none"
+                >
+                  <option value="">Unassigned</option>
+                  {users.filter(u => u.isActive).map(u => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-secondary bg-tertiary hover:bg-tertiary/80 transition-colors">

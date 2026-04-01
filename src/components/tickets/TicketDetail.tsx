@@ -19,7 +19,7 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function TicketDetail({ ticketId, onBack }: { ticketId: string; onBack: () => void }) {
-  const { currentUser } = useAuth();
+  const { currentUser, users } = useAuth();
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -67,6 +67,15 @@ export default function TicketDetail({ ticketId, onBack }: { ticketId: string; o
     try {
       await api.updateTicket(ticketId, { priority: newPriority });
       setTicket(prev => prev ? { ...prev, priority: newPriority } : null);
+    } catch { /* ignore */ }
+  };
+
+  const handleAssignChange = async (userId: string) => {
+    if (!ticket) return;
+    try {
+      await api.updateTicket(ticketId, { assignedTo: userId || null });
+      const assignedUser = users.find(u => u.id === userId);
+      setTicket(prev => prev ? { ...prev, assignedTo: userId || null, assignedName: assignedUser?.name || null } : null);
     } catch { /* ignore */ }
   };
 
@@ -215,6 +224,23 @@ export default function TicketDetail({ ticketId, onBack }: { ticketId: string; o
               <div className="flex items-center justify-between">
                 <span className="text-xs text-tertiary">Created by</span>
                 <span className="text-xs font-medium text-primary">{ticket.userName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-tertiary">Assigned to</span>
+                {isAdmin ? (
+                  <select
+                    value={ticket.assignedTo || ''}
+                    onChange={e => handleAssignChange(e.target.value)}
+                    className="text-xs bg-input rounded-lg px-2 py-1 border border-primary text-primary focus:outline-none focus:ring-1 focus:ring-primary-500/30"
+                  >
+                    <option value="">Unassigned</option>
+                    {users.filter(u => u.isActive).map(u => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-xs font-medium text-primary">{ticket.assignedName || 'Unassigned'}</span>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-tertiary">Created</span>

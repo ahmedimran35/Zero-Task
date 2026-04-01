@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import type { SavedView } from '../../types';
 import {
   Search, Sun, Moon, Plus, Filter, Download, Keyboard, LogOut,
-  Bookmark, Trash2, X,
+  Bookmark, Trash2, X, Menu,
 } from 'lucide-react';
 import Notifications from '../ui/Notifications';
 
@@ -30,6 +31,7 @@ const viewTitles: Record<string, string> = {
 export default function Header() {
   const { state, dispatch, wsStatus } = useAppContext();
   const { currentUser, logout, viewAsUser } = useAuth();
+  const isMobile = useIsMobile();
   const [showFilter, setShowFilter] = useState(false);
   const [saveViewName, setSaveViewName] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
@@ -68,29 +70,36 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 bg-card border-b border-primary flex items-center justify-between px-6 sticky top-0 z-30">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold text-primary">
+    <header className={`h-16 bg-card border-b border-primary flex items-center justify-between sticky top-0 z-30 ${isMobile ? 'px-3' : 'px-6'}`}>
+      <div className="flex items-center gap-2">
+        {isMobile && (
+          <button onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })} className="p-2 rounded-xl hover:bg-tertiary transition-colors">
+            <Menu size={20} className="text-secondary" />
+          </button>
+        )}
+        <h1 className={`${isMobile ? 'text-base' : 'text-xl'} font-bold text-primary truncate`}>
           {viewTitles[state.currentView] || state.currentView}
-          {viewAsUser && <span className="text-sm font-normal text-tertiary ml-2">({viewAsUser.name})</span>}
+          {viewAsUser && <span className="text-xs font-normal text-tertiary ml-1">({viewAsUser.name})</span>}
         </h1>
         {isAdmin && state.currentView !== 'admin' && (
           <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-500">Admin</span>
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Search */}
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
-          <input
-            type="text"
-            placeholder="Search tasks... (Ctrl+K)"
-            value={state.searchQuery}
-            onChange={e => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
-            className="w-64 pl-9 pr-4 py-2 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
-          />
-        </div>
+      <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-3'}`}>
+        {/* Search - hidden on mobile */}
+        {!isMobile && (
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
+            <input
+              type="text"
+              placeholder="Search tasks... (Ctrl+K)"
+              value={state.searchQuery}
+              onChange={e => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
+              className="w-64 pl-9 pr-4 py-2 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
+            />
+          </div>
+        )}
 
         {/* Filter dropdown */}
         <div className="relative">
@@ -189,59 +198,65 @@ export default function Header() {
           )}
         </div>
 
-        {/* Export/Import */}
-        <button
-          onClick={() => dispatch({ type: 'SHOW_EXPORT_IMPORT', payload: true })}
-          className="p-2.5 rounded-xl bg-input border border-primary hover:bg-tertiary transition-colors"
-        >
-          <Download size={16} className="text-secondary" />
-        </button>
+        {/* Export/Import - hidden on mobile */}
+        {!isMobile && (
+          <button
+            onClick={() => dispatch({ type: 'SHOW_EXPORT_IMPORT', payload: true })}
+            className="p-2.5 rounded-xl bg-input border border-primary hover:bg-tertiary transition-colors"
+          >
+            <Download size={16} className="text-secondary" />
+          </button>
+        )}
 
         {/* Theme toggle */}
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => dispatch({ type: 'TOGGLE_DARK_MODE' })}
-          className="p-2.5 rounded-xl bg-input border border-primary hover:bg-tertiary transition-colors"
+          className={`p-2.5 rounded-xl bg-input border border-primary hover:bg-tertiary transition-colors ${isMobile ? 'p-2' : ''}`}
         >
-          {state.darkMode ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-secondary" />}
+          {state.darkMode ? <Sun size={isMobile ? 14 : 16} className="text-amber-400" /> : <Moon size={isMobile ? 14 : 16} className="text-secondary" />}
         </motion.button>
 
         {/* Notifications */}
         <Notifications />
 
-        {/* Keyboard shortcuts */}
-        <button
-          onClick={() => {
-            dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Shortcuts: N=new, Ctrl+K=quick add, D=dashboard, B=board, L=list, C=calendar', type: 'info' } });
-          }}
-          className="p-2.5 rounded-xl bg-input border border-primary hover:bg-tertiary transition-colors"
-        >
-          <Keyboard size={16} className="text-secondary" />
-        </button>
+        {/* Keyboard shortcuts - hidden on mobile */}
+        {!isMobile && (
+          <button
+            onClick={() => {
+              dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Shortcuts: N=new, Ctrl+K=quick add, D=dashboard, B=board, L=list, C=calendar', type: 'info' } });
+            }}
+            className="p-2.5 rounded-xl bg-input border border-primary hover:bg-tertiary transition-colors"
+          >
+            <Keyboard size={16} className="text-secondary" />
+          </button>
+        )}
 
         {/* Add Task */}
         <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: isMobile ? 1 : 1.02 }}
+          whileTap={{ scale: isMobile ? 0.95 : 0.98 }}
           onClick={() => {
             dispatch({ type: 'SET_EDITING_TASK', payload: null });
             dispatch({ type: 'SHOW_TASK_MODAL', payload: true });
           }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-violet-600 text-white rounded-xl font-medium text-sm shadow-theme-md hover:shadow-theme-lg transition-all"
+          className={`flex items-center gap-2 bg-gradient-to-r from-primary-600 to-violet-600 text-white rounded-xl font-medium text-sm shadow-theme-md hover:shadow-theme-lg transition-all ${isMobile ? 'px-3 py-2' : 'px-4 py-2.5'}`}
         >
           <Plus size={16} />
-          Add Task
+          {!isMobile && 'Add Task'}
         </motion.button>
 
-        {/* Connection status */}
-        <div className="flex items-center gap-1.5 px-2" title={wsStatus === 'connected' ? 'Real-time connected' : 'Disconnected'}>
-          <div className={`w-2 h-2 rounded-full ${
-            wsStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : wsStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
-          }`} />
-          <span className="text-[10px] text-tertiary hidden xl:inline">
-            {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? '...' : 'Offline'}
-          </span>
-        </div>
+        {/* Connection status - hidden on mobile */}
+        {!isMobile && (
+          <div className="flex items-center gap-1.5 px-2" title={wsStatus === 'connected' ? 'Real-time connected' : 'Disconnected'}>
+            <div className={`w-2 h-2 rounded-full ${
+              wsStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : wsStatus === 'connecting' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
+            }`} />
+            <span className="text-[10px] text-tertiary">
+              {wsStatus === 'connected' ? 'Live' : wsStatus === 'connecting' ? '...' : 'Offline'}
+            </span>
+          </div>
+        )}
 
         {/* User avatar + logout */}
         {currentUser && (

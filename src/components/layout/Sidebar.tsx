@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 import { useTimer, formatElapsed } from '../../hooks/useTimer';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import {
   LayoutDashboard, Columns3, List, Calendar, ChevronLeft, ChevronRight,
   FolderKanban, Plus, CheckCircle2, Clock, AlertTriangle, Settings,
@@ -30,6 +31,7 @@ export default function Sidebar() {
   const { state, dispatch } = useAppContext();
   const { currentUser, logout, viewAsUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
+  const isMobile = useIsMobile();
   const [unreadTickets, setUnreadTickets] = useState(0);
   const { elapsed, stopTimer, activeTimer } = useTimer();
 
@@ -62,9 +64,9 @@ export default function Sidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: state.sidebarOpen ? 280 : 72 }}
+      animate={{ width: isMobile ? (state.sidebarOpen ? 280 : 0) : (state.sidebarOpen ? 280 : 72) }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="bg-sidebar h-screen flex flex-col fixed left-0 top-0 z-40 overflow-hidden"
+      className={`bg-sidebar h-screen flex flex-col fixed left-0 top-0 z-40 overflow-hidden ${isMobile && !state.sidebarOpen ? 'pointer-events-none' : ''}`}
     >
       <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-violet-500 flex items-center justify-center flex-shrink-0">

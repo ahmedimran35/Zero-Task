@@ -220,6 +220,11 @@ export default function TicketList() {
                     <span className="text-xs text-tertiary">
                       {isAdmin ? `by ${ticket.userName}` : `#${ticket.id.slice(0, 8)}`}
                     </span>
+                    {ticket.assignedName && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-500">
+                        → {ticket.assignedName}
+                      </span>
+                    )}
                     <div className="flex items-center gap-1 text-xs text-tertiary">
                       <MessageSquare size={12} />
                       {ticket.messageCount}
