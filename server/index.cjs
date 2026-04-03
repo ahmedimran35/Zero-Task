@@ -35,6 +35,7 @@ const automationsModule = require('./routes/automations.cjs');
 app.use('/api/automations', automationsModule.router);
 app.use('/api/custom-fields', require('./routes/custom-fields.cjs'));
 app.use('/api/projects', require('./routes/projects.cjs'));
+app.use('/api/documents', require('./routes/documents.cjs'));
 app.use('/api/attachments', require('./routes/attachments.cjs'));
 
 const webhooksModule = require('./routes/webhooks.cjs');
@@ -43,6 +44,8 @@ app.use('/api/webhooks', webhooksModule.router);
 // AI routes
 app.use('/api/ai', require('./routes/ai.cjs'));
 app.use('/api/ai-providers', require('./routes/ai-providers.cjs').router);
+app.use('/api/portfolios', require('./routes/portfolios.cjs'));
+app.use('/api/teams', require('./routes/teams.cjs'));
 
 // Forms routes
 app.use('/api/forms', require('./routes/forms.cjs'));

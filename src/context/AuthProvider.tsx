@@ -55,9 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsers([]);
   }, []);
 
-  const createUser = useCallback(async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
+  const createUser = useCallback(async (email: string, password: string, name: string, role: string = 'user'): Promise<{ success: boolean; error?: string }> => {
     try {
-      const newUser = await api.createUser({ email, password, name });
+      const newUser = await api.createUser({ email, password, name, role });
       setUsers(prev => [...prev, { ...newUser, password, createdAt: newUser.createdAt || new Date().toISOString() }]);
       return { success: true };
     } catch (err: unknown) {

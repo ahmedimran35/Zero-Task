@@ -240,9 +240,17 @@ export default function TaskList() {
 
       {/* Tasks */}
       <div className="space-y-2">
-        {sortedTasks.map((task, i) => (
+        {sortedTasks.slice(0, 50).map((task, i) => (
           <TaskRow key={task.id} task={task} index={i} isSelected={state.selectedTasks.includes(task.id)} />
         ))}
+        {sortedTasks.length > 50 && (
+          <div className="text-center py-6 bg-tertiary/30 rounded-xl border border-primary">
+            <p className="text-sm text-tertiary">
+              Showing 50 of <span className="font-semibold text-primary">{sortedTasks.length}</span> tasks.
+              Use filters to narrow results or use search.
+            </p>
+          </div>
+        )}
         {sortedTasks.length === 0 && (
           <div className="text-center py-12">
             <Circle size={48} className="mx-auto mb-3 text-tertiary opacity-40" />

@@ -28,6 +28,7 @@ export const initialState: AppState = {
   tasks: [],
   categories: defaultCategories,
   templates: defaultTemplates,
+  sprints: [],
   currentView: 'dashboard',
   activeTimer: null,
   searchQuery: '',
@@ -355,8 +356,13 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       newState = { ...state, savedViews: state.savedViews.filter(v => v.id !== action.payload) };
       break;
 
+    case 'SET_SPRINTS': newState = { ...state, sprints: action.payload }; break;
+    case 'ADD_SPRINT': newState = { ...state, sprints: [action.payload, ...state.sprints] }; break;
+    case 'UPDATE_SPRINT': newState = { ...state, sprints: state.sprints.map(s => s.id === action.payload.id ? action.payload : s) }; break;
+    case 'DELETE_SPRINT': newState = { ...state, sprints: state.sprints.filter(s => s.id !== action.payload) }; break;
+
     case 'LOAD_STATE': {
-      const { tasks, categories, templates, notifications, savedViews } = action.payload as any;
+      const { tasks, categories, templates, notifications, savedViews, sprints } = action.payload as any;
       newState = {
         ...state,
         ...(tasks !== undefined && { tasks }),
@@ -364,6 +370,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...(templates !== undefined && { templates }),
         ...(notifications !== undefined && { notifications }),
         ...(savedViews !== undefined && { savedViews }),
+        ...(sprints !== undefined && { sprints }),
       };
       break;
     }

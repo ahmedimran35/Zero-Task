@@ -17,10 +17,16 @@ router.get('/', adminMiddleware, (req, res) => {
   })));
 });
 
-// Create user (admin only)
+// Create user (admin or super_admin)
 router.post('/', adminMiddleware, async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, role } = req.body;
   if (!email || !password || !name) return res.status(400).json({ error: 'All fields required' });
+
+  // Only super_admin can create admin or super_admin users
+  const newRole = role || 'user';
+  if ((newRole === 'admin' || newRole === 'super_admin') && req.userRole !== 'super_admin') {
+    return res.status(403).json({ error: 'Only super admin can create admin users' });
+  }
 
   const db = getDb();
   const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?)').get(email);
@@ -28,7 +34,7 @@ router.post('/', adminMiddleware, async (req, res) => {
 
   const id = uuidv4();
   const hashedPassword = await bcrypt.hash(password, 10);
-  db.prepare('INSERT INTO users (id, email, password, name) VALUES (?, ?, ?, ?)').run(id, email.trim(), hashedPassword, name.trim());
+  db.prepare('INSERT INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)').run(id, email.trim(), hashedPassword, name.trim(), newRole);
 
   // Initialize default categories for new user
   const defaultCats = [

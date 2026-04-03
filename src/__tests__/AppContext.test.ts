@@ -42,6 +42,7 @@ function makeTask(overrides: Partial<Task> = {}): Task {
     activityLog: [],
     completedAt: null,
     projectId: null,
+    sprintId: null,
     storyPoints: 0,
     timeEstimate: 0,
     ...overrides,

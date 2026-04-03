@@ -4,13 +4,16 @@ import { useAuth } from '../../context/AuthContext';
 import { X, Mail, Lock, User as UserIcon, Eye, EyeOff, UserPlus, AlertCircle } from 'lucide-react';
 
 export default function CreateUserModal({ onClose }: { onClose: () => void }) {
-  const { createUser } = useAuth();
+  const { createUser, currentUser } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('user');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+
+  const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'admin';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +36,7 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    const result = await createUser(email.trim(), password, name.trim());
+    const result = await createUser(email.trim(), password, name.trim(), role);
     if (!result.success) {
       setError(result.error || 'Failed to create user');
       return;
@@ -143,6 +146,21 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
               />
             </div>
           </div>
+
+          {isSuperAdmin && (
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1.5">Role</label>
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value)}
+                className="w-full px-4 py-2.5 bg-input rounded-xl text-sm text-primary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button

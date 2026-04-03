@@ -23,6 +23,9 @@ const viewTitles: Record<string, string> = {
   sprints: 'Sprints',
   automations: 'Automations',
   projects: 'Projects',
+  portfolio: 'Portfolio',
+  teams: 'Teams',
+  docs: 'Docs',
   integrations: 'Integrations',
   settings: 'Settings',
   forms: 'Forms',
@@ -93,10 +96,10 @@ export default function Header() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary" />
             <input
               type="text"
-              placeholder="Search tasks... (Ctrl+K)"
+              placeholder="Search... (Ctrl+K) status:done priority:high #tag"
               value={state.searchQuery}
               onChange={e => dispatch({ type: 'SET_SEARCH', payload: e.target.value })}
-              className="w-64 pl-9 pr-4 py-2 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
+              className="w-72 pl-9 pr-4 py-2 bg-input rounded-xl text-sm text-primary placeholder:text-tertiary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
             />
           </div>
         )}
@@ -237,6 +240,11 @@ export default function Header() {
           whileHover={{ scale: isMobile ? 1 : 1.02 }}
           whileTap={{ scale: isMobile ? 0.95 : 0.98 }}
           onClick={() => {
+            if (state.sprints.length === 0) {
+              dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Create a Sprint first to add tasks', type: 'error' } });
+              dispatch({ type: 'SET_VIEW', payload: 'sprints' });
+              return;
+            }
             dispatch({ type: 'SET_EDITING_TASK', payload: null });
             dispatch({ type: 'SHOW_TASK_MODAL', payload: true });
           }}

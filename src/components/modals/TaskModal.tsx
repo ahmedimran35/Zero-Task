@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAppContext } from '../../context/AppContext';
 import type { Task, TaskStatus, Priority, Subtask, Recurrence } from '../../types';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, Calendar, Tag, Flag, FolderOpen, CheckSquare, Square, User, Repeat, Sparkles } from 'lucide-react';
+import { X, Plus, Trash2, Calendar, Tag, Flag, FolderOpen, CheckSquare, Square, User, Repeat, Sparkles, Zap } from 'lucide-react';
 
 const priorityOptions: { value: Priority; label: string; color: string }[] = [
   { value: 'urgent', label: 'Urgent', color: 'bg-rose-500' },
@@ -42,6 +42,7 @@ export default function TaskModal() {
   const [storyPoints, setStoryPoints] = useState(0);
   const [timeEstimate, setTimeEstimate] = useState(0);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedSprint, setSelectedSprint] = useState<string | null>(null);
 
   useEffect(() => {
     if (editingTask) {
@@ -58,10 +59,12 @@ export default function TaskModal() {
       setDependsOn(editingTask.dependsOn);
       setStoryPoints(editingTask.storyPoints || 0);
       setTimeEstimate(editingTask.timeEstimate || 0);
+      setSelectedSprint(editingTask.sprintId || null);
     } else {
       setTitle(''); setDescription(''); setPriority('medium'); setStatus('todo'); setCategory('Work');
       setDueDate(''); setSubtasks([]); setTags([]); setAssignee(null); setRecurring(null); setDependsOn([]);
       setStoryPoints(0); setTimeEstimate(0);
+      setSelectedSprint(state.sprints.find(s => s.status === 'active')?.id || null);
     }
     setShowTemplates(!editingTask);
   }, [editingTask]);
@@ -100,6 +103,7 @@ export default function TaskModal() {
       activityLog: editingTask?.activityLog || [{ id: uuidv4(), type: 'created', message: 'Task created', timestamp: new Date().toISOString() }],
       completedAt: editingTask?.completedAt || null,
       projectId: editingTask?.projectId || null,
+      sprintId: selectedSprint,
       storyPoints,
       timeEstimate,
     };
@@ -221,6 +225,19 @@ export default function TaskModal() {
                 ))}
               </div>
             </div>
+
+            {state.sprints.length > 0 && (
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-primary mb-1.5"><Zap size={14} /> Sprint</label>
+                <select value={selectedSprint || ''} onChange={e => setSelectedSprint(e.target.value || null)}
+                  className="w-full px-4 py-2.5 bg-input rounded-xl text-sm text-primary border border-primary focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all">
+                  <option value="">No Sprint</option>
+                  {state.sprints.map(sprint => (
+                    <option key={sprint.id} value={sprint.id}>{sprint.name} ({sprint.status})</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Due Date + Assignee + Recurring */}

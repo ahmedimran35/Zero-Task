@@ -1,6 +1,6 @@
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
-export type ViewType = 'dashboard' | 'kanban' | 'list' | 'calendar' | 'admin' | 'tickets' | 'gantt' | 'goals' | 'workload' | 'sprints' | 'automations' | 'projects' | 'integrations' | 'settings' | 'forms';
+export type ViewType = 'dashboard' | 'kanban' | 'list' | 'calendar' | 'admin' | 'tickets' | 'gantt' | 'goals' | 'workload' | 'sprints' | 'automations' | 'projects' | 'portfolio' | 'teams' | 'docs' | 'integrations' | 'settings' | 'forms';
 export type TicketStatus = 'open' | 'in-progress' | 'resolved' | 'closed';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'custom';
 export type GoalStatus = 'active' | 'completed' | 'archived';
@@ -55,6 +55,7 @@ export interface Task {
   recurring: Recurrence | null;
   dependsOn: string[];
   projectId: string | null;
+  sprintId: string | null;
   timeLogs: TimeLog[];
   comments: Comment[];
   activityLog: ActivityLogEntry[];
@@ -180,6 +181,26 @@ export interface Project {
   createdAt: string;
 }
 
+export interface Document {
+  id: string;
+  title: string;
+  content: string;
+  parentId: string | null;
+  projectId: string | null;
+  isPublic: boolean;
+  childCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Portfolio {
+  id: string;
+  name: string;
+  description: string;
+  projectCount?: number;
+  createdAt: string;
+}
+
 export interface CustomField {
   id: string;
   name: string;
@@ -228,6 +249,7 @@ export interface AppState {
   tasks: Task[];
   categories: Category[];
   templates: TaskTemplate[];
+  sprints: Sprint[];
   currentView: ViewType;
   activeTimer: ActiveTimer | null;
   searchQuery: string;
@@ -301,4 +323,8 @@ export type AppAction =
   | { type: 'SET_SAVED_VIEWS'; payload: SavedView[] }
   | { type: 'ADD_SAVED_VIEW'; payload: SavedView }
   | { type: 'DELETE_SAVED_VIEW'; payload: string }
+  | { type: 'SET_SPRINTS'; payload: Sprint[] }
+  | { type: 'ADD_SPRINT'; payload: Sprint }
+  | { type: 'UPDATE_SPRINT'; payload: Sprint }
+  | { type: 'DELETE_SPRINT'; payload: string }
   | { type: 'LOAD_STATE'; payload: Partial<AppState> };

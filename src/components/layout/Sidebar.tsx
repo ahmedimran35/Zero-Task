@@ -1,55 +1,44 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { api } from '../../utils/api';
 import { useTimer, formatElapsed } from '../../hooks/useTimer';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import {
   LayoutDashboard, Columns3, List, Calendar, ChevronLeft, ChevronRight,
   FolderKanban, Plus, CheckCircle2, Clock, AlertTriangle, Settings,
-  Shield, LogOut, Eye, LifeBuoy, Square, BarChart3, Target, Users, Zap, FolderOpen, Link2, FileText,
+  Shield, LogOut, Eye, LifeBuoy, Square, Target, Users, Zap, FolderOpen, Link2, FileText, LayoutGrid, FileCode,
 } from 'lucide-react';
 
 const navItems = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: LayoutDashboard, key: 'D' },
-  { id: 'kanban' as const, label: 'Kanban Board', icon: Columns3, key: 'B' },
-  { id: 'list' as const, label: 'Task List', icon: List, key: 'L' },
-  { id: 'calendar' as const, label: 'Calendar', icon: Calendar, key: 'C' },
-  { id: 'gantt' as const, label: 'Gantt', icon: BarChart3, key: 'G' },
-  { id: 'goals' as const, label: 'Goals', icon: Target, key: 'O' },
   { id: 'sprints' as const, label: 'Sprints', icon: Zap, key: 'P' },
   { id: 'projects' as const, label: 'Projects', icon: FolderOpen, key: 'J' },
+  { id: 'kanban' as const, label: 'Kanban', icon: Columns3, key: 'B' },
+  { id: 'list' as const, label: 'List', icon: List, key: 'L' },
+  { id: 'calendar' as const, label: 'Calendar', icon: Calendar, key: 'C' },
+  { id: 'goals' as const, label: 'Goals', icon: Target, key: 'O' },
+  { id: 'portfolio' as const, label: 'Portfolio', icon: LayoutGrid, key: 'K' },
+];
+
+const adminItems = [
+  { id: 'docs' as const, label: 'Docs', icon: FileText, key: 'X' },
   { id: 'workload' as const, label: 'Workload', icon: Users, key: 'W' },
   { id: 'automations' as const, label: 'Automations', icon: Zap, key: 'A' },
+  { id: 'forms' as const, label: 'Forms', icon: FileCode, key: 'F' },
   { id: 'integrations' as const, label: 'Integrations', icon: Link2, key: 'I' },
-  { id: 'forms' as const, label: 'Forms', icon: FileText, key: 'F' },
   { id: 'tickets' as const, label: 'Support', icon: LifeBuoy, key: 'H' },
+  { id: 'teams' as const, label: 'Teams', icon: Users, key: 'T' },
+  { id: 'admin' as const, label: 'Users', icon: Shield, key: 'U' },
+  { id: 'settings' as const, label: 'Settings', icon: Settings, key: 'S' },
 ];
 
 export default function Sidebar() {
   const { state, dispatch } = useAppContext();
   const { currentUser, logout, viewAsUser } = useAuth();
-  const isAdmin = currentUser?.role === 'admin';
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const isSuperAdmin = currentUser?.role === 'super_admin';
   const isMobile = useIsMobile();
-  const [unreadTickets, setUnreadTickets] = useState(0);
   const { elapsed, stopTimer, activeTimer } = useTimer();
-
-  // Compute unread from notifications in state + poll API
-  useEffect(() => {
-    const ticketNotifs = state.notifications.filter(n => n.type === 'ticket_message' && !n.read).length;
-    setUnreadTickets(ticketNotifs);
-  }, [state.notifications]);
-
-  // Poll for new ticket notifications every 30s
-  useEffect(() => {
-    const loadUnread = () => {
-      api.getUnreadTicketCount().then(r => setUnreadTickets(r.count)).catch(() => {});
-    };
-    loadUnread();
-    const interval = setInterval(loadUnread, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const taskStats = {
     total: state.tasks.length,
@@ -95,16 +84,32 @@ export default function Sidebar() {
             >
               <item.icon size={20} className="flex-shrink-0" />
               {state.sidebarOpen && (
-                <>
-                  <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
-                  {item.id === 'tickets' && unreadTickets > 0 ? (
-                    <span className="ml-auto w-5 h-5 bg-rose-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
-                      {unreadTickets > 9 ? '9+' : unreadTickets}
-                    </span>
-                  ) : (
-                    <kbd className="ml-auto text-[10px] text-white/30 font-mono bg-white/5 px-1.5 py-0.5 rounded">{item.key}</kbd>
-                  )}
-                </>
+                <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+              )}
+              {isActive && (
+                <motion.div layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-400 rounded-r-full" />
+              )}
+            </button>
+          );
+        })}
+
+        {/* Admin section */}
+        {isAdmin && state.sidebarOpen && (
+          <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider px-3 mt-4 mb-2">Management</p>
+        )}
+        {isAdmin && adminItems.filter(item => item.id !== 'teams' || isSuperAdmin).map(item => {
+          const isActive = state.currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => dispatch({ type: 'SET_VIEW', payload: item.id })}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
+                isActive ? 'bg-white/15 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'
+              }`}
+            >
+              <item.icon size={20} className="flex-shrink-0" />
+              {state.sidebarOpen && (
+                <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
               )}
               {isActive && (
                 <motion.div layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-400 rounded-r-full" />
@@ -135,19 +140,6 @@ export default function Sidebar() {
         )}
 
 
-        {/* Settings Nav Item */}
-        <button
-          onClick={() => dispatch({ type: 'SET_VIEW', payload: 'settings' })}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative ${
-            state.currentView === 'settings' ? 'bg-white/15 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'
-          }`}
-        >
-          <Settings size={20} className="flex-shrink-0" />
-          {state.sidebarOpen && <span className="text-sm font-medium whitespace-nowrap">Settings</span>}
-          {state.currentView === 'settings' && (
-            <motion.div layoutId="sidebar-active" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-400 rounded-r-full" />
-          )}
-        </button>
         {/* Categories */}
         {state.sidebarOpen && (
           <>

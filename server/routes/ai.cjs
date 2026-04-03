@@ -13,6 +13,31 @@ function getActiveProvider() {
   return { id: row.id, type: row.provider_type, apiKey: row.api_key, baseUrl: row.base_url, model: row.model };
 }
 
+function checkAndUseQuota(userId) {
+  const db = getDb();
+  const quota = db.prepare('SELECT * FROM user_ai_quotas WHERE user_id = ?').get(userId);
+  
+  if (!quota || quota.daily_limit === 0) {
+    return { allowed: false, error: 'No AI quota available' };
+  }
+  
+  const now = new Date();
+  if (quota.reset_at && new Date(quota.reset_at) < now) {
+    db.prepare('UPDATE user_ai_quotas SET used_today = 0, reset_at = ? WHERE id = ?').run(
+      new Date(now.getTime() + 24*60*60*1000).toISOString(), quota.id
+    );
+    quota.used_today = 0;
+  }
+  
+  if (quota.used_today >= quota.daily_limit) {
+    return { allowed: false, error: 'Daily AI quota exceeded' };
+  }
+  
+  db.prepare('UPDATE user_ai_quotas SET used_today = used_today + 1 WHERE id = ?').run(quota.id);
+  
+  return { allowed: true, remaining: quota.daily_limit - quota.used_today - 1 };
+}
+
 async function callAI(messages, maxTokens) {
   const provider = getActiveProvider();
   if (!provider || !provider.apiKey) throw new Error('No AI provider configured');
@@ -75,6 +100,9 @@ router.post('/parse-task', (req, res) => {
 });
 
 router.post('/summarize', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { taskTitle, comments, description } = req.body;
   try {
     const content = 'Task: ' + taskTitle + '\nDescription: ' + (description || 'None') + '\nComments:\n' + (comments || []).map(c => '- ' + c.author + ': ' + c.text).join('\n');
@@ -84,6 +112,9 @@ router.post('/summarize', async (req, res) => {
 });
 
 router.post('/generate-subtasks', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { title, description } = req.body;
   try {
     const text = await callAI([{ role: 'system', content: 'Generate 3-6 subtasks. Return ONLY JSON array: ["subtask1","subtask2"].' }, { role: 'user', content: 'Title: ' + title + '\nDescription: ' + (description || 'None') }], 300);
@@ -92,6 +123,9 @@ router.post('/generate-subtasks', async (req, res) => {
 });
 
 router.post('/search', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { query } = req.body;
   const db = getDb();
   const tasks = db.prepare('SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC LIMIT 100').all(req.userId);
@@ -120,6 +154,9 @@ router.get('/standup', (req, res) => {
 
 // Workspace Q&A
 router.post('/workspace-q', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { question } = req.body;
   if (!question) return res.status(400).json({ error: 'Question required' });
   const db = getDb();
@@ -136,6 +173,9 @@ router.post('/workspace-q', async (req, res) => {
 
 // Generate description
 router.post('/generate-description', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { title, existingDescription } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
   try {
@@ -149,6 +189,9 @@ router.post('/generate-description', async (req, res) => {
 
 // Suggest priority
 router.post('/suggest-priority', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { title, description, dueDate } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
   try {
@@ -162,6 +205,9 @@ router.post('/suggest-priority', async (req, res) => {
 
 // Suggest tags
 router.post('/suggest-tags', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const { title, description } = req.body;
   if (!title) return res.status(400).json({ error: 'Title required' });
   try {
@@ -176,6 +222,9 @@ router.post('/suggest-tags', async (req, res) => {
 
 // Weekly summary
 router.post('/weekly-summary', async (req, res) => {
+  const quotaCheck = checkAndUseQuota(req.userId);
+  if (!quotaCheck.allowed) return res.status(403).json({ error: quotaCheck.error });
+  
   const db = getDb();
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
   const tasks = db.prepare('SELECT * FROM tasks WHERE user_id = ? AND updated_at > ?').all(req.userId, weekAgo);

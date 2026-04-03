@@ -312,12 +312,53 @@ function initSchema() {
       is_active INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT DEFAULT '',
+      parent_id TEXT,
+      project_id TEXT,
+      is_public INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS portfolios (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS portfolio_projects (
+      portfolio_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      PRIMARY KEY (portfolio_id, project_id),
+      FOREIGN KEY (portfolio_id) REFERENCES portfolios(id) ON DELETE CASCADE,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
   `);
 
   // Migration: add columns if they don't exist
   try { db.exec(`ALTER TABLE tasks ADD COLUMN project_id TEXT`); } catch {}
   try { db.exec(`ALTER TABLE tasks ADD COLUMN story_points INTEGER DEFAULT 0`); } catch {}
   try { db.exec(`ALTER TABLE tasks ADD COLUMN time_estimate INTEGER DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE tasks ADD COLUMN sprint_id TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE projects ADD COLUMN archived INTEGER DEFAULT 0`); } catch {}
+  try { db.exec(`ALTER TABLE projects ADD COLUMN color TEXT DEFAULT '#3b82f6'`); } catch {}
+  try { db.exec(`ALTER TABLE projects ADD COLUMN icon TEXT DEFAULT 'folder'`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS documents (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL, content TEXT DEFAULT '', parent_id TEXT, project_id TEXT, is_public INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')))`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS portfolios (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL, description TEXT DEFAULT '', created_at TEXT DEFAULT (datetime('now')))`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS portfolio_projects (portfolio_id TEXT NOT NULL, project_id TEXT NOT NULL, PRIMARY KEY (portfolio_id, project_id))`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT DEFAULT '', created_by TEXT, created_at TEXT DEFAULT (datetime('now')))`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS team_members (team_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT DEFAULT 'member', PRIMARY KEY (team_id, user_id))`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS team_ai_quotas (id TEXT PRIMARY KEY, team_id TEXT NOT NULL, provider TEXT NOT NULL, daily_limit INTEGER DEFAULT 100, used_today INTEGER DEFAULT 0, reset_at TEXT, FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE)`); } catch {}
+  try { db.exec(`CREATE TABLE IF NOT EXISTS user_ai_quotas (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, provider TEXT NOT NULL, daily_limit INTEGER DEFAULT 10, used_today INTEGER DEFAULT 0, reset_at TEXT, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`); } catch {}
 }
 
 function seedDefaultData() {

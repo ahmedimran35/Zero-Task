@@ -22,16 +22,17 @@ function AuthenticatedApp() {
 
     const loadData = async () => {
       try {
-        const [tasks, categories, templates, notifications, savedViews] = await Promise.all([
+        const [tasks, categories, templates, notifications, savedViews, sprints] = await Promise.all([
           api.getTasks(viewAsUser ? effectiveUserId : undefined),
           api.getCategories(),
           api.getTemplates(),
           api.getNotifications(),
           api.getSavedViews().catch(() => []),
+          api.getSprints().catch(() => []),
         ]);
         dispatch({
           type: 'LOAD_STATE',
-          payload: { tasks, categories, templates, notifications, savedViews },
+          payload: { tasks, categories, templates, notifications, savedViews, sprints },
         });
       } catch (err) {
         console.error('Failed to load data:', err);
@@ -112,6 +113,8 @@ function AuthenticatedApp() {
       if (e.key === 'b' && !e.ctrlKey) dispatch({ type: 'SET_VIEW', payload: 'kanban' });
       if (e.key === 'l' && !e.ctrlKey) dispatch({ type: 'SET_VIEW', payload: 'list' });
       if (e.key === 'c' && !e.ctrlKey) dispatch({ type: 'SET_VIEW', payload: 'calendar' });
+      if ((e.key === 'k' || e.key === 'K') && !e.ctrlKey) dispatch({ type: 'SET_VIEW', payload: 'portfolio' });
+      if ((e.key === 'x' || e.key === 'X') && !e.ctrlKey) dispatch({ type: 'SET_VIEW', payload: 'docs' });
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

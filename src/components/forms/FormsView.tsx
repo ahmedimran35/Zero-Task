@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppContext } from '../../context/AppContext';
 import { api } from '../../utils/api';
 import {
   FileText, Plus, Trash2, Copy, ExternalLink, X, GripVertical,
@@ -32,17 +33,18 @@ const fieldTypes = [
 ];
 
 export default function FormsView() {
+  const { dispatch } = useAppContext();
   const [forms, setForms] = useState<Form[]>([]);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingForm, setEditingForm] = useState<Form | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      (api as any).getForms?.().then((f: any) => {
-        if (Array.isArray(f)) setForms(f);
-      }).catch(() => {});
-    } catch {}
+    api.getForms()
+      .then((f: Form[]) => { if (Array.isArray(f)) setForms(f); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const handleCreateForm = () => {
@@ -73,22 +75,33 @@ export default function FormsView() {
   };
 
   const handleSaveForm = async () => {
-    if (!editingForm || !editingForm.name.trim()) return;
+    if (!editingForm || !editingForm.name.trim()) {
+      dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Form name is required', type: 'error' } });
+      return;
+    }
     try {
-      const result = await (api as any).createForm?.({
+      const result = await api.createForm({
         name: editingForm.name,
         fields: editingForm.fields,
         settings: editingForm.settings,
       });
       if (result) setForms(prev => [result, ...prev]);
-    } catch {}
+      dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Form created!', type: 'success' } });
+    } catch (err: any) {
+      dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: err?.message || 'Failed to create form', type: 'error' } });
+    }
     setShowBuilder(false);
     setEditingForm(null);
   };
 
   const handleDeleteForm = async (id: string) => {
-    try { await (api as any).deleteForm?.(id); } catch {}
-    setForms(prev => prev.filter(f => f.id !== id));
+    try { 
+      await api.deleteForm(id); 
+      setForms(prev => prev.filter(f => f.id !== id));
+      dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Form deleted', type: 'success' } });
+    } catch (err: any) {
+      dispatch({ type: 'ADD_TOAST', payload: { id: Date.now().toString(), message: 'Failed to delete form', type: 'error' } });
+    }
   };
 
   const handleCopyLink = (id: string) => {
@@ -116,7 +129,11 @@ export default function FormsView() {
         </motion.button>
       </div>
 
-      {forms.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full" />
+        </div>
+      ) : forms.length === 0 ? (
         <div className="bg-card rounded-2xl border border-primary p-12 text-center">
           <FileText size={48} className="text-tertiary mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-primary mb-2">No forms yet</h3>

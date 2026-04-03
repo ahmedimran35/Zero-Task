@@ -57,12 +57,20 @@ router.post('/', (req, res) => {
   const t = req.body;
   const id = t.id || uuidv4();
 
-  db.prepare(`INSERT INTO tasks (id, user_id, title, description, status, priority, category, due_date, progress, assignee, recurring_type, recurring_interval, depends_on, project_id, story_points, time_estimate, completed_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+  // If sprintId provided, verify it exists and belongs to user
+  if (t.sprintId) {
+    const sprint = db.prepare('SELECT * FROM sprints WHERE id = ? AND user_id = ?').get(t.sprintId, req.userId);
+    if (!sprint) {
+      return res.status(400).json({ error: 'Invalid sprint' });
+    }
+  }
+  
+  db.prepare(`INSERT INTO tasks (id, user_id, title, description, status, priority, category, due_date, progress, assignee, recurring_type, recurring_interval, depends_on, project_id, story_points, time_estimate, completed_at, sprint_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     id, req.userId, t.title, t.description || '', t.status || 'todo', t.priority || 'medium',
     t.category || 'Work', t.dueDate || null, t.progress || 0, t.assignee || null,
     t.recurring?.type || null, t.recurring?.interval || null,
-    JSON.stringify(t.dependsOn || []), t.projectId || null, t.storyPoints || 0, t.timeEstimate || 0, t.completedAt || null
+    JSON.stringify(t.dependsOn || []), t.projectId || null, t.storyPoints || 0, t.timeEstimate || 0, t.completedAt || null, t.sprintId || null
   );
 
   // Insert subtasks

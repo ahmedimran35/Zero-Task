@@ -30,10 +30,17 @@ function authMiddleware(req, res, next) {
 }
 
 function adminMiddleware(req, res, next) {
-  if (req.userRole !== 'admin') {
+  if (req.userRole !== 'admin' && req.userRole !== 'super_admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();
 }
 
-module.exports = { authMiddleware, adminMiddleware, JWT_SECRET };
+function superAdminMiddleware(req, res, next) {
+  if (req.userRole !== 'super_admin') {
+    return res.status(403).json({ error: 'Super admin access required' });
+  }
+  next();
+}
+
+module.exports = { authMiddleware, adminMiddleware, superAdminMiddleware, JWT_SECRET };

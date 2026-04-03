@@ -253,7 +253,7 @@ export default function KanbanBoard() {
                       snapshot.isDraggingOver ? 'bg-primary-500/5' : ''
                     }`}
                   >
-                    {columnTasks.map((task, i) => (
+                    {columnTasks.slice(0, 30).map((task, i) => (
                       <KanbanCard
                         key={task.id}
                         task={task}
@@ -261,6 +261,11 @@ export default function KanbanBoard() {
                         selected={state.selectedTasks.includes(task.id)}
                       />
                     ))}
+                    {columnTasks.length > 30 && (
+                      <div className="text-center py-3 bg-tertiary/30 rounded-xl border border-primary">
+                        <p className="text-xs text-tertiary">+{columnTasks.length - 30} more tasks</p>
+                      </div>
+                    )}
                     {columnTasks.length === 0 && !snapshot.isDraggingOver && (
                       <div className="flex flex-col items-center justify-center py-12 text-tertiary">
                         <column.icon size={32} className="mb-2 opacity-40" />

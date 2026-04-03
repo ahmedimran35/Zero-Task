@@ -19,9 +19,12 @@ import ProjectsView from '../projects/ProjectsView';
 import IntegrationsView from '../integrations/IntegrationsView';
 import SettingsView from '../settings/SettingsView';
 import FormsView from '../forms/FormsView';
+import DocumentsView from '../docs/DocumentsView';
+import PortfolioView from '../portfolio/PortfolioView';
+import TeamsView from '../teams/TeamsView';
 import TaskModal from '../modals/TaskModal';
 import TaskDetailPanel from '../detail/TaskDetailPanel';
-import QuickAdd from '../modals/QuickAdd';
+import CommandPalette from '../modals/CommandPalette';
 import CategoryManager from '../modals/CategoryManager';
 import ExportImport from '../modals/ExportImport';
 import ConfirmDialog from '../modals/ConfirmDialog';
@@ -39,6 +42,9 @@ const views: Record<string, React.ComponentType> = {
   sprints: SprintView,
   automations: AutomationsView,
   projects: ProjectsView,
+  portfolio: PortfolioView,
+  teams: TeamsView,
+  docs: DocumentsView,
   integrations: IntegrationsView,
   settings: SettingsView,
   forms: FormsView,
@@ -88,7 +94,7 @@ export default function Layout() {
       <AnimatePresence>
         {state.showTaskModal && <TaskModal />}
         {state.selectedTask && <TaskDetailPanel />}
-        {state.showQuickAdd && <QuickAdd />}
+        {state.showQuickAdd && <CommandPalette />}
         {state.showCategoryManager && <CategoryManager />}
         {state.showExportImport && <ExportImport />}
         {confirmConfig && (

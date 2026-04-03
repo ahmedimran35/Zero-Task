@@ -62,6 +62,7 @@ export default function QuickAdd() {
       activityLog: [{ id: uuidv4(), type: 'created' as const, message: 'Quick created', timestamp: new Date().toISOString() }],
       completedAt: null,
       projectId: null,
+      sprintId: null,
       storyPoints: 0,
       timeEstimate: 0,
     };
